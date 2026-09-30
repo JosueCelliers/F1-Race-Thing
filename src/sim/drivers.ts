@@ -1,4 +1,4 @@
-import { NAME_GROUPS } from '../content/names';
+import { isFamousDriverName, NAME_GROUPS } from '../content/names';
 import { nation, NATIONS } from '../content/nations';
 import { BROW_PARTS, EXTRA_PARTS, EYE_PARTS, FACE_PARTS, FACIAL_PARTS, HAIR_PARTS, HELMET_COLORS, HELMET_PATTERNS, MOUTH_PARTS, NOSE_PARTS } from '../content/looks';
 import { PERSONALITIES, personality } from '../content/traits';
@@ -84,9 +84,15 @@ function feminiseSurname(last: string, rule?: string): string {
 export function generateName(rng: Rng, nationId: string, gender: Gender, surname?: string): { first: string; last: string } {
   const n = nation(nationId);
   const group = NAME_GROUPS[n.nameGroup] ?? NAME_GROUPS.english;
-  const first = rng.pick(gender === 'f' ? group.female : group.male);
-  let last = surname ?? rng.pick(group.last);
-  if (gender === 'f') last = feminiseSurname(last, group.femaleSurnameRule);
+  let first = '';
+  let last = '';
+  // Re-roll the (rare) combinations that spell a famous real driver's name.
+  for (let attempt = 0; attempt < 12; attempt++) {
+    first = rng.pick(gender === 'f' ? group.female : group.male);
+    last = surname ?? rng.pick(group.last);
+    if (gender === 'f') last = feminiseSurname(last, group.femaleSurnameRule);
+    if (!isFamousDriverName(first, last)) break;
+  }
   return { first, last };
 }
 
