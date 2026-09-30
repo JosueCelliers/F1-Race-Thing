@@ -128,16 +128,18 @@ export function SpinWheel({ slices, size = 320, request, onDone, onPressHub, fas
     const turns = fast ? 2 : 5 + Math.floor(Math.random() * 2);
     const delta = ((((-theta - now) % 360) + 360) % 360) + 360 * turns;
     const duration = fast ? 1300 : 4200 + Math.random() * 700;
-    spinning.value = 1;
+    spinning.set(1);
     haptic.medium();
     const finish = () => {
       haptic.thud();
       onDone?.(request.target);
     };
-    rot.value = withTiming(now + delta, { duration, easing: Easing.bezier(0.1, 0.72, 0.12, 1) }, (ok) => {
-      spinning.value = 0;
-      if (ok) runOnJS(finish)();
-    });
+    rot.set(
+      withTiming(now + delta, { duration, easing: Easing.bezier(0.1, 0.72, 0.12, 1) }, (ok) => {
+        spinning.value = 0;
+        if (ok) runOnJS(finish)();
+      }),
+    );
   }, [request, angles, fast, rot, spinning, onDone]);
 
   const wheelStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${rot.value}deg` }] }));

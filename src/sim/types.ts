@@ -431,7 +431,14 @@ export interface HighlightSpec {
   /** e.g. corner name or lap info. */
   where?: string;
   position?: number;
+  /** Broadcast context (optional for older saves). */
+  series?: string;
+  event?: string;
+  year?: number;
+  lap?: string;
 }
+
+export type HighlightTone = 'good' | 'bad' | 'neutral';
 
 export interface HighlightRecord {
   id: ID;
@@ -439,6 +446,9 @@ export interface HighlightRecord {
   round: number;
   trackName: string;
   spec: HighlightSpec;
+  /** How much the moment matters for the career reel (prestige-weighted). */
+  importance?: number;
+  tone?: HighlightTone;
 }
 
 // ---------------------------------------------------------------------------

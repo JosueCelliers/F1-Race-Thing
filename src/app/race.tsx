@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Flag } from '../art/Flag';
 import { TrackMap } from '../art/TrackMap';
 import { series as seriesDef } from '../content/series';
-import { HighlightPlayer } from '../highlights/HighlightPlayer';
+import { HighlightPlayer, HighlightReel } from '../highlights/HighlightPlayer';
 import { TrackBroadcast, type Segment } from '../race/TrackBroadcast';
 import { MomentSheet } from '../race/MomentSheet';
 import { gapLabel, Tower, TyreDot } from '../race/Tower';
@@ -14,8 +14,10 @@ import { finishRace, forecast, nextRaceMeta, prepareRace, specFromMoment, type P
 import { topRival } from '../sim/events';
 import type { Moment, MomentResolution } from '../sim/race/moments';
 import type { Snapshot } from '../sim/race/engine';
+import { Rng } from '../sim/rng';
 import type { HighlightSpec } from '../sim/types';
 import { useGame, useWorld } from '../state/store';
+import { HighlightRows, PlayAllChip } from '../ui/HighlightList';
 import { haptic } from '../ui/haptics';
 import { Icon } from '../ui/Icon';
 import { Backdrop, Btn, Card, Header, IconBtn, Pill, PosBadge, Press, Screen, SectionTitle, Txt } from '../ui/kit';
@@ -218,9 +220,11 @@ function Live({
       if (pausedRef.current) return;
       const dist = Math.max(0, t - prog.value);
       const dur = Math.max(16, (dist * STEP_MS) / speedRef.current);
-      prog.value = withTiming(t, { duration: dur, easing: Easing.linear }, (fin) => {
-        if (fin) runOnJS(done)();
-      });
+      prog.set(
+        withTiming(t, { duration: dur, easing: Easing.linear }, (fin) => {
+          if (fin) runOnJS(done)();
+        }),
+      );
     },
     [prog],
   );
@@ -256,7 +260,7 @@ function Live({
           caption: crash.kind === 'mech' ? "IT'S OVER" : 'CRASH!',
           sub: crash.text,
         });
-        extras.current.highlights.push({ kind: spec.kind, actors: [playerIdx], caption: spec.caption, sub: spec.sub });
+        extras.current.highlights.push({ kind: spec.kind, actors: [playerIdx], caption: spec.caption, sub: spec.sub, step: snap.step });
         afterHighlight.current = () => tickRef.current();
         setHighlight(spec);
         return;
@@ -269,7 +273,7 @@ function Live({
   const simulateAndAnimate = useCallback(() => {
     const prevSnap = eng.snapshots[eng.step];
     const snap = eng.simulateStep();
-    seg.value = { s0: prog.value, s1: snap.step, from: gapsOf(prevSnap), to: gapsOf(snap) };
+    seg.set({ s0: prog.get(), s1: snap.step, from: gapsOf(prevSnap), to: gapsOf(snap) });
     animateTo(snap.step, () => onStepDone(snap));
   }, [eng, seg, prog, animateTo, onStepDone]);
 
@@ -281,7 +285,7 @@ function Live({
     const m = dir.detect();
     if (m) {
       const cur = gapsOf(eng.snapshots[eng.step]);
-      seg.value = { s0: prog.value, s1: eng.step + m.at, from: cur, to: cur };
+      seg.set({ s0: prog.get(), s1: eng.step + m.at, from: cur, to: cur });
       animateTo(eng.step + m.at, () => {
         haptic.warning();
         setMoment(m);
@@ -292,7 +296,11 @@ function Live({
   }, [eng, dir, seg, prog, animateTo, simulateAndAnimate, finishUp]);
 
   const tickRef = useRef(tick);
-  tickRef.current = tick;
+  useEffect(() => {
+    // Latest-callback ref (breaks the tick -> step -> tick cycle). The React Compiler is off here.
+    // eslint-disable-next-line react-hooks/immutability
+    tickRef.current = tick;
+  }, [tick]);
 
   useEffect(() => {
     const t = setTimeout(() => tickRef.current(), 500);
@@ -339,12 +347,12 @@ function Live({
       eng.simulateStep();
     }
     const snap = eng.snapshots[eng.step];
-    prog.value = eng.step;
-    seg.value = { s0: eng.step, s1: eng.step, from: gapsOf(snap), to: gapsOf(snap) };
+    prog.set(eng.step);
+    seg.set({ s0: eng.step, s1: eng.step, from: gapsOf(snap), to: gapsOf(snap) });
     setSnapIdx(eng.step);
     if (m) {
       const cur = gapsOf(snap);
-      seg.value = { s0: eng.step, s1: eng.step + m.at, from: cur, to: cur };
+      seg.set({ s0: eng.step, s1: eng.step + m.at, from: cur, to: cur });
       const mm = m;
       animateTo(eng.step + m.at, () => {
         haptic.warning();
@@ -530,7 +538,10 @@ function Live({
 }
 
 function RainOverlay({ width, height }: { width: number; height: number }) {
-  const streaks = useMemo(() => Array.from({ length: 34 }, () => ({ x: Math.random() * width, y: Math.random() * height, l: 8 + Math.random() * 14 })), [width, height]);
+  const streaks = useMemo(() => {
+    const rng = new Rng(7);
+    return Array.from({ length: 34 }, () => ({ x: rng.float(0, width), y: rng.float(0, height), l: rng.float(8, 22) }));
+  }, [width, height]);
   return (
     <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height, opacity: 0.35 }}>
       {streaks.map((s, i) => (
@@ -552,7 +563,7 @@ function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOutcome }
   const s = seriesDef(prep.meta.seriesId);
   const points = world.season.series[prep.meta.seriesId]?.results.find((x) => x.round === prep.meta.roundIndex)?.points ?? {};
   const hls = world.active?.highlights.filter((h) => outcome.highlightIds.includes(h.id)) ?? [];
-  const [replay, setReplay] = useState<HighlightSpec | null>(null);
+  const [reel, setReel] = useState<number | null>(null);
   return (
     <Screen
       tint={r.pos === 1 ? C.gold : s.color}
@@ -585,25 +596,8 @@ function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOutcome }
       ) : null}
       {hls.length ? (
         <>
-          <SectionTitle title="Highlights" />
-          <View style={{ gap: 6 }}>
-            {hls.map((h) => (
-              <Press key={h.id} onPress={() => setReplay(h.spec)}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, padding: 12, borderRadius: R.md, borderWidth: 1, borderColor: C.line }}>
-                  <Icon name="film" color={C.red} />
-                  <View style={{ flex: 1 }}>
-                    <Txt v="h3">{h.spec.caption}</Txt>
-                    {h.spec.sub ? (
-                      <Txt v="small" color={C.textDim} numberOfLines={1}>
-                        {h.spec.sub}
-                      </Txt>
-                    ) : null}
-                  </View>
-                  <Icon name="play" color={C.text} size={18} />
-                </View>
-              </Press>
-            ))}
-          </View>
+          <SectionTitle title="Highlights" right={hls.length > 1 ? <PlayAllChip onPress={() => setReel(0)} /> : undefined} />
+          <HighlightRows items={hls} meta="sub" onPlay={(i) => setReel(i)} />
         </>
       ) : null}
       <SectionTitle title="Classification" />
@@ -631,7 +625,7 @@ function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOutcome }
           );
         })}
       </Card>
-      {replay ? <HighlightPlayer spec={replay} onDone={() => setReplay(null)} /> : null}
+      {reel !== null ? <HighlightReel specs={hls.map((h) => h.spec)} start={reel} onClose={() => setReel(null)} /> : null}
     </Screen>
   );
 }

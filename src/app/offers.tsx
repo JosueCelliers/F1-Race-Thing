@@ -191,7 +191,7 @@ export default function Offers() {
     >
       {offers.length === 0 ? (
         <Card style={{ marginTop: S.md }} accent={C.red}>
-          <Txt v="h1">The phone isn't ringing</Txt>
+          <Txt v="h1">The phone isn’t ringing</Txt>
           <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
             No team wants you for {world.year + 1}. Sit out a year and hope, spin for a miracle, or call it a career.
           </Txt>

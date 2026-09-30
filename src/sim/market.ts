@@ -215,56 +215,103 @@ export function computeOffers(world: World): Offer[] {
   const contractValid = !!player.contract && player.contract.until >= nextYear;
   const currentTeam = player.contract?.team;
   const pool = Object.values(world.drivers).filter(
-    (d) => d.status !== 'retired' && d.id !== player.id && (!d.contract || d.contract.until < nextYear),
+    (d) => d.status !== 'retired' && d.id !== player.id && !d.careerId && (!d.contract || d.contract.until < nextYear),
   );
   const offers: Offer[] = [];
   const fam = family(player.family);
   const wallet = a.money + fam.budget;
+  const age = nextYear - player.born;
+  // Closest miss, used for the lifeline below when nobody calls.
+  let nearMiss: { team: TeamState; s: SeriesDef; gap: number; value: number } | undefined;
 
+  // Replay the winter's driver market the way runMarket() will: seats are filled from
+  // the most attractive down, each taking the best driver still available. The player
+  // gets an offer from every seat that would pick them over the best remaining AI.
+  const seats: TeamState[] = [];
   for (const team of Object.values(world.teams)) {
     const s = seriesDef(team.series);
-    if (!playerEligible(player, s, nextYear, wasChampion)) continue;
+    const open = s.carsPerTeam - kept(world, team, nextYear, player.id).length;
+    for (let k = 0; k < open; k++) seats.push(team);
+  }
+  seats.sort((x, y) => seatAttractiveness(y) - seatAttractiveness(x));
+  const taken = new Set<ID>();
+  const asked = new Set<ID>();
+
+  for (const team of seats) {
+    const s = seriesDef(team.series);
+    let best: Driver | undefined;
+    let bestScore = -Infinity;
+    for (const d of pool) {
+      if (taken.has(d.id) || !aiEligible(d, s, nextYear)) continue;
+      const sc = seatScore(d, team, s, nextYear, noiseSeed);
+      if (sc > bestScore) {
+        bestScore = sc;
+        best = d;
+      }
+    }
+    // With nobody suitable the team would promote a fresh driver from the lower ranks.
+    const bar = Math.max(bestScore, s.ovrBand[0] - 8);
     const isCurrent = team.id === currentTeam;
-    const keptIds = kept(world, team, nextYear, player.id);
-    const open = s.carsPerTeam - keptIds.length;
-    if (open <= 0) continue;
-    if (isCurrent && contractValid) continue;
-    const candidates = pool.filter((d) => aiEligible(d, s, nextYear));
-    const scores = candidates.map((d) => seatScore(d, team, s, nextYear, noiseSeed)).sort((x, y) => y - x);
-    let mine = marketValue(player, nextYear, s.tier) + (p.offerMult - 1) * 6;
-    if (isCurrent) mine += 3 + (a.teamRelation - 50) * 0.12;
-    if (team.principal.driverId && player.parentId === team.principal.driverId) mine += 6;
-    if (team.principal.driverId && world.drivers[team.principal.driverId]?.careerId) mine += 2;
-    if (player.nation === team.nation) mine += 1;
-    const rank = scores.filter((x) => x > mine).length + 1;
-    const age = nextYear - player.born;
-    const junior = s.tier >= 3 && age <= 19;
-    const threshold = (isCurrent ? 3 : s.prestige >= 90 ? 1 : 2) + (open >= 2 ? 1 : 0) + (junior ? 2 : 0);
-    const value = mine;
-    if (rank <= threshold) {
-      offers.push({
-        id: `o${offers.length}-${team.id}`,
-        series: s.id,
-        team: team.id,
-        years: isCurrent ? rng.int(1, 3) : contractYears(rng, s),
-        role: rank === 1 ? 'lead' : rank <= 2 ? 'equal' : 'second',
-        salary: salaryFor(s, value, team),
-        kind: isCurrent ? 'renewal' : 'offer',
-      });
-    } else if (team.budget < (junior ? 72 : 58) && rank <= threshold + (junior ? 9 : 5)) {
-      const cost = Math.round(s.paySeat * (1.35 - team.budget / 100));
-      if (wallet >= cost) {
+    const eligible = !asked.has(team.id) && playerEligible(player, s, nextYear, wasChampion) && !(isCurrent && contractValid);
+    if (eligible) {
+      asked.add(team.id);
+      let mine = marketValue(player, nextYear, s.tier) + (p.offerMult - 1) * 6;
+      if (isCurrent) mine += 3 + (a.teamRelation - 50) * 0.12;
+      if (team.principal.driverId && player.parentId === team.principal.driverId) mine += 6;
+      if (team.principal.driverId && world.drivers[team.principal.driverId]?.careerId) mine += 2;
+      if (player.nation === team.nation) mine += 1;
+      mine += new Rng(mixSeed(noiseSeed, player.id, team.id)).normal(0, 2.5);
+      const junior = s.tier >= 3 && age <= 19;
+      // The protagonist gets a little benefit of the doubt, juniors a bit more.
+      const lenient = (isCurrent ? 3 : 1.5) + (junior ? 3 : 0);
+      const margin = mine + lenient - bar;
+      if (margin >= 0) {
         offers.push({
-          id: `p${offers.length}-${team.id}`,
+          id: `o${offers.length}-${team.id}`,
           series: s.id,
           team: team.id,
-          years: 1,
-          role: 'second',
-          salary: -cost,
-          kind: 'paySeat',
-          note: `Bring $${formatMoney(cost)} of backing`,
+          years: isCurrent ? rng.int(1, 3) : contractYears(rng, s),
+          role: margin > 8 ? 'lead' : margin > 3 ? 'equal' : 'second',
+          salary: salaryFor(s, mine, team),
+          kind: isCurrent ? 'renewal' : 'offer',
         });
+        continue; // The AI candidate stays on the market for the next seat.
       }
+      if (team.budget < (junior ? 72 : 58) && margin >= -(junior ? 14 : 8)) {
+        const cost = Math.round(s.paySeat * (1.35 - team.budget / 100));
+        if (wallet >= cost) {
+          offers.push({
+            id: `p${offers.length}-${team.id}`,
+            series: s.id,
+            team: team.id,
+            years: 1,
+            role: 'second',
+            salary: -cost,
+            kind: 'paySeat',
+            note: team.budget < 45 ? 'They need your money just to make the grid' : 'Money talks, and your sponsors are fluent',
+          });
+        }
+      }
+      if (!isCurrent && (!nearMiss || -margin < nearMiss.gap)) nearMiss = { team, s, gap: -margin, value: mine };
+    }
+    if (best) taken.add(best.id);
+  }
+
+  // Lifeline: a proven driver rarely stays unemployed for long. The team that came
+  // closest to signing you may take a chance, more likely the longer you've waited.
+  if (!offers.length && !contractValid && nearMiss && nearMiss.gap < 12) {
+    const chance = clamp(0.7 - nearMiss.gap * 0.05 + player.yearsWithoutSeat * 0.2, 0.2, 0.95);
+    if (rng.chance(chance)) {
+      offers.push({
+        id: `l-${nearMiss.team.id}`,
+        series: nearMiss.s.id,
+        team: nearMiss.team.id,
+        years: 1,
+        role: 'second',
+        salary: salaryFor(nearMiss.s, nearMiss.value - 6, nearMiss.team),
+        kind: 'offer',
+        note: 'Nobody else called. They are taking a chance on you.',
+      });
     }
   }
 

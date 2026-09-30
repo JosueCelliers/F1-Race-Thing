@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { mixSeed, Rng } from '../sim/rng';
 
 const COLORS = ['#FFC940', '#FF2D46', '#3BA7FF', '#24D17E', '#FFFFFF', '#A874FF', '#FF8A1F'];
 
@@ -23,21 +24,20 @@ function Piece({ x, delay, color, w, h, drift, spin, height, duration }: { x: nu
 
 export function Confetti({ count = 60, burst = 0 }: { count?: number; burst?: number }) {
   const { width, height } = useWindowDimensions();
-  const pieces = useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        key: `${burst}-${i}`,
-        x: Math.random() * width,
-        delay: Math.random() * 900,
-        color: COLORS[i % COLORS.length],
-        w: 6 + Math.random() * 6,
-        h: 8 + Math.random() * 8,
-        drift: Math.random() * 2 - 1,
-        spin: 360 + Math.random() * 720,
-        duration: 2200 + Math.random() * 1600,
-      })),
-    [count, width, burst],
-  );
+  const pieces = useMemo(() => {
+    const rng = new Rng(mixSeed(0xc0f, burst, count));
+    return Array.from({ length: count }, (_, i) => ({
+      key: `${burst}-${i}`,
+      x: rng.float(0, width),
+      delay: rng.float(0, 900),
+      color: COLORS[i % COLORS.length],
+      w: rng.float(6, 12),
+      h: rng.float(8, 16),
+      drift: rng.float(-1, 1),
+      spin: rng.float(360, 1080),
+      duration: rng.float(2200, 3800),
+    }));
+  }, [count, width, burst]);
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
       {pieces.map(({ key, ...p }) => (

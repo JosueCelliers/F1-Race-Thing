@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useIsFocused } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Modal, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
@@ -10,6 +10,7 @@ import { playRaceInstant } from '../sim/autoplay';
 import { answerInvite, dueInvite, forecast, nextRaceMeta, simulateReserveSeason, type RaceOutcome } from '../sim/career';
 import { ageOf, fullName, ovr, totalStats } from '../sim/drivers';
 import { resolveLifeEvent, topRival } from '../sim/events';
+import type { LifeEventInstance } from '../sim/types';
 import { formatMoney } from '../sim/market';
 import { mixSeed, Rng } from '../sim/rng';
 import { standings } from '../sim/season';
@@ -32,6 +33,10 @@ export default function CareerHub() {
   const mutate = useGame((s) => s.mutate);
   const [tab, setTab] = useState<Tab>('season');
   const [quick, setQuick] = useState<RaceOutcome | null>(null);
+  // Keeps the life-event sheet open on its outcome after the sim clears `pendingEvent`.
+  const [openEvent, setOpenEvent] = useState<LifeEventInstance | null>(null);
+  // Modals render above every screen, so only show ours while the hub is in front.
+  const focused = useIsFocused();
   const a = world?.active;
   const me = a ? world!.drivers[a.driverId] : undefined;
   const meta = useMemo(() => (world && a ? nextRaceMeta(world) : null), [world, a, a?.raceCount, a?.phase, world?.season.year]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -160,7 +165,7 @@ export default function CareerHub() {
             <Card style={{ marginTop: S.md }}>
               <Txt v="h1">No race seat this year</Txt>
               <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
-                You're on the sidelines, working the simulator and waiting for a call. The season will go on without you.
+                You’re on the sidelines, working the simulator and waiting for a call. The season will go on without you.
               </Txt>
               <Btn label="Simulate the season" icon="ff" style={{ marginTop: S.md }} onPress={() => mutate((w) => simulateReserveSeason(w))} />
             </Card>
@@ -311,17 +316,18 @@ export default function CareerHub() {
         </Animated.View>
       ) : null}
 
-      {a.pendingEvent ? (
+      {(a.pendingEvent || openEvent) && !quick && focused ? (
         <LifeEventSheet
-          event={a.pendingEvent}
+          event={(a.pendingEvent ?? openEvent)!}
           onChoose={(i) => {
+            setOpenEvent(a.pendingEvent ?? null);
             let res;
             mutate((w) => {
               res = resolveLifeEvent(w, i, new Rng(mixSeed(w.seed, 'ev', a.raceCount, i)));
             });
             return res;
           }}
-          onClose={() => mutate(() => {})}
+          onClose={() => setOpenEvent(null)}
         />
       ) : null}
 

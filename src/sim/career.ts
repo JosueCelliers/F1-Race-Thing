@@ -19,7 +19,6 @@ import { clamp, hashString, mixSeed, Rng } from './rng';
 import { advanceOtherSeries, applyRoundResult, assignPoints, finishSeason, standings, startSeason, teamsInSeries, type Standing } from './season';
 import { headline } from './text';
 import type {
-  ActiveCareer,
   CareerIndexEntry,
   CareerMoment,
   CareerRecord,
@@ -29,6 +28,7 @@ import type {
   HighlightActor,
   HighlightRecord,
   HighlightSpec,
+  HighlightTone,
   MomentKind,
   Offer,
   OneOffInvite,
@@ -77,13 +77,39 @@ function addMoment(world: World, kind: MomentKind, title: string, text: string, 
 
 function saveHighlight(world: World, spec: HighlightSpec, round: number, trackName: string, importance: number): string {
   const a = world.active!;
-  const rec: HighlightRecord & { importance?: number } = { id: newId(world, 'h'), year: world.year, round, trackName, spec, importance };
+  const rec: HighlightRecord = { id: newId(world, 'h'), year: world.year, round, trackName, spec, importance, tone: highlightTone(spec) };
   a.highlights.push(rec);
   if (a.highlights.length > 70) {
-    const idx = a.highlights.reduce((best, h, i, arr) => ((h as { importance?: number }).importance! < (arr[best] as { importance?: number }).importance! ? i : best), 0);
+    const idx = a.highlights.reduce((best, h, i, arr) => ((h.importance ?? 0) < (arr[best].importance ?? 0) ? i : best), 0);
     a.highlights.splice(idx, 1);
   }
   return rec.id;
+}
+
+/** Was this a great moment for the player, or one they'd rather forget? */
+export function highlightTone(spec: HighlightSpec): HighlightTone {
+  const lead = spec.actors[0]?.isPlayer ?? false;
+  const involved = spec.actors.some((x) => x.isPlayer);
+  switch (spec.kind) {
+    case 'title':
+    case 'finishWin':
+    case 'photoFinish':
+    case 'podium':
+      return involved ? 'good' : 'neutral';
+    case 'overtake':
+    case 'dive':
+    case 'defend':
+      return lead ? 'good' : involved ? 'bad' : 'neutral';
+    case 'failedPass':
+      return lead ? 'bad' : involved ? 'good' : 'neutral';
+    case 'crash':
+    case 'engineFailure':
+    case 'spin':
+    case 'collision':
+      return involved ? 'bad' : 'neutral';
+    default:
+      return 'neutral';
+  }
 }
 
 export function actorFromEntry(e: EngineEntry): HighlightActor {
@@ -441,6 +467,7 @@ export interface RaceOutcome {
 
 export function specFromMoment(world: World, prep: PreparedRace, h: MomentHighlight): HighlightSpec {
   const e = prep.engine;
+  const step = Math.min(e.steps, h.step ?? e.step);
   const s = seriesDef(prep.meta.seriesId);
   return {
     kind: h.kind,
@@ -452,7 +479,18 @@ export function specFromMoment(world: World, prep: PreparedRace, h: MomentHighli
     actors: h.actors.map((i) => actorFromEntry(e.entries[i])),
     caption: h.caption,
     sub: h.sub,
-    where: prep.meta.track.corners[Math.abs(hashString(h.caption)) % Math.max(1, prep.meta.track.corners.length)],
+    where:
+      h.kind === 'start'
+        ? 'The grid'
+        : h.kind === 'finishWin' || h.kind === 'photoFinish'
+          ? 'Finish line'
+          : h.kind === 'podium' || h.kind === 'title' || h.kind === 'pitStop'
+            ? undefined
+            : prep.meta.track.corners[Math.abs(hashString(h.caption)) % Math.max(1, prep.meta.track.corners.length)],
+    series: prep.meta.seriesId,
+    event: prep.meta.round.name,
+    year: world.year,
+    lap: prep.meta.round.hours ? `Hour ${Math.max(1, Math.ceil((prep.meta.round.hours * step) / e.steps))}` : `Lap ${Math.max(1, e.displayLap(step))}`,
   };
 }
 
@@ -568,8 +606,8 @@ export function finishRace(world: World, prep: PreparedRace, extras: RaceExtras)
       if (b.won) r.wonBattles++;
       if (b.kind === 'collision') {
         r.incidents++;
-        r.heat += 16;
-      } else r.heat += 4;
+        r.heat += 18;
+      } else r.heat += 2.5;
     }
     // Close finishes build rivalries too
     const myOrder = result.order.indexOf(me.id);
@@ -580,12 +618,16 @@ export function finishRace(world: World, prep: PreparedRace, extras: RaceExtras)
       const r = (a.rivals[other] ??= { driverId: other, name: fullName(od), battles: 0, wonBattles: 0, incidents: 0, heat: 0 });
       r.heat += pos <= 5 ? 2.5 : 1;
     }
-    for (const r of Object.values(a.rivals)) {
-      r.heat = clamp(r.heat, 0, 100);
-      if (r.heat >= 35 && !a.flags[`rival_${r.driverId}`]) {
-        a.flags[`rival_${r.driverId}`] = 1;
-        newMoments.push(addMoment(world, 'rivalry', 'A rivalry is born', `${r.name} and ${fullName(me)} — this is getting personal.`, 2));
-      }
+    for (const r of Object.values(a.rivals)) r.heat = clamp(r.heat, 0, 100);
+    // At most one new named rivalry a season: the hottest feud that has boiled over.
+    const hottest = Object.values(a.rivals)
+      .filter((r) => r.heat >= 40 && !a.flags[`rival_${r.driverId}`] && world.drivers[r.driverId])
+      .sort((x, y) => y.heat - x.heat)[0];
+    if (hottest && !a.flags[`rivalYear_${world.year}`]) {
+      a.flags[`rival_${hottest.driverId}`] = 1;
+      a.flags[`rivalYear_${world.year}`] = 1;
+      const text = hottest.incidents ? `${hottest.incidents} clash${hottest.incidents > 1 ? 'es' : ''} with ${hottest.name} and counting — this is personal now.` : `${hottest.name} and ${fullName(me)} keep ending up side by side — this is getting personal.`;
+      newMoments.push(addMoment(world, 'rivalry', 'A rivalry is born', text, 2));
     }
 
     // Milestones & firsts
@@ -652,7 +694,9 @@ export function finishRace(world: World, prep: PreparedRace, extras: RaceExtras)
     }
     void pEntry;
     for (const h of hl) {
-      const imp = (HIGHLIGHT_IMPORTANCE[h.kind] ?? 1) * (s.prestige / 100 + 0.3) * (meta.round.special ? 1.5 : 1);
+      // Being passed is only worth keeping at the big events.
+      const base = h.kind === 'overtake' && h.actors[0] !== pIdx ? 0.8 : HIGHLIGHT_IMPORTANCE[h.kind] ?? 1;
+      const imp = base * (s.prestige / 100 + 0.3) * (meta.round.special ? 1.5 : 1);
       if (imp < 0.6) continue;
       const spec = specFromMoment(world, prep, h);
       highlightIds.push(saveHighlight(world, spec, meta.roundIndex, meta.round.name, imp));

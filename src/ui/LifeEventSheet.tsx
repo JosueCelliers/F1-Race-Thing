@@ -98,7 +98,7 @@ export function LifeEventSheet({
             {!res ? (
               <View style={{ marginTop: S.lg, gap: S.sm }}>
                 {event.options.map((o, i) => (
-                  <Press key={i} onPress={() => choose(i)}>
+                  <Press key={i} testID={`event-opt-${i}`} onPress={() => choose(i)}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface2, borderRadius: R.md, padding: 14, borderWidth: 1, borderColor: C.lineStrong }}>
                       <Txt v="h1">{o.emoji ?? '•'}</Txt>
                       <View style={{ flex: 1 }}>

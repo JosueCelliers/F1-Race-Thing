@@ -62,6 +62,8 @@ export function Press({
   disabled,
   scale = 0.96,
   feedback = 'tap',
+  label,
+  testID,
 }: {
   onPress?: () => void;
   children: React.ReactNode;
@@ -69,6 +71,9 @@ export function Press({
   disabled?: boolean;
   scale?: number;
   feedback?: 'tap' | 'tick' | 'none';
+  /** Accessibility label (screen readers); defaults to the visible text. */
+  label?: string;
+  testID?: string;
 }) {
   const s = useSharedValue(1);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
@@ -77,11 +82,15 @@ export function Press({
     <Pressable
       style={outer}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={disabled ? { disabled: true } : undefined}
+      testID={testID}
       onPressIn={() => {
-        s.value = withSpring(scale, { damping: 18, stiffness: 400 });
+        s.set(withSpring(scale, { damping: 18, stiffness: 400 }));
       }}
       onPressOut={() => {
-        s.value = withSpring(1, { damping: 14, stiffness: 300 });
+        s.set(withSpring(1, { damping: 14, stiffness: 300 }));
       }}
       onPress={() => {
         if (feedback === 'tap') haptic.tap();
@@ -143,6 +152,7 @@ export function Btn({
   style,
   color,
   small,
+  testID,
 }: {
   label: string;
   onPress?: () => void;
@@ -153,12 +163,13 @@ export function Btn({
   style?: StyleProp<ViewStyle>;
   color?: string;
   small?: boolean;
+  testID?: string;
 }) {
   const base = kind === 'primary' ? C.red : kind === 'gold' ? C.gold : kind === 'danger' ? '#8B1E2B' : kind === 'team' ? color ?? C.red : C.surface3;
   const fg = kind === 'ghost' ? C.text : readableOn(base);
   const gradient: [string, string] = kind === 'ghost' ? ['transparent', 'transparent'] : [shade(base, 0.12), shade(base, -0.18)];
   return (
-    <Press onPress={onPress} disabled={disabled} style={[{ borderRadius: R.md, overflow: 'hidden' }, style]}>
+    <Press onPress={onPress} disabled={disabled} label={sub ? `${label}. ${sub}` : label} testID={testID} style={[{ borderRadius: R.md, overflow: 'hidden' }, style]}>
       <LinearGradient
         colors={gradient}
         start={{ x: 0, y: 0 }}
@@ -186,9 +197,9 @@ export function Btn({
   );
 }
 
-export function IconBtn({ icon, onPress, size = 40, color = C.text, bg = C.surface2, style }: { icon: IconName; onPress?: () => void; size?: number; color?: string; bg?: string; style?: StyleProp<ViewStyle> }) {
+export function IconBtn({ icon, onPress, size = 40, color = C.text, bg = C.surface2, style, label, testID }: { icon: IconName; onPress?: () => void; size?: number; color?: string; bg?: string; style?: StyleProp<ViewStyle>; label?: string; testID?: string }) {
   return (
-    <Press onPress={onPress} style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }, style]}>
+    <Press onPress={onPress} label={label ?? icon} testID={testID} style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }, style]}>
       <Icon name={icon} size={size * 0.5} color={color} />
     </Press>
   );

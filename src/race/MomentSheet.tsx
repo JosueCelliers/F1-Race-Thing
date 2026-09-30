@@ -45,6 +45,7 @@ export function MomentSheet({
             {moment.options.map((o) => (
               <Press
                 key={o.id}
+                testID={`moment-opt-${o.id}`}
                 disabled={!!picked}
                 onPress={() => {
                   setPicked(o.id);

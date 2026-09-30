@@ -2,21 +2,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { Trophy } from '../../art/Badges';
 import { Flag } from '../../art/Flag';
 import { Helmet } from '../../art/Helmet';
 import { Portrait } from '../../art/Portrait';
 import { nation } from '../../content/nations';
 import { series as seriesDef, SPECIAL_MAP } from '../../content/series';
-import { HighlightPlayer } from '../../highlights/HighlightPlayer';
+import { HighlightReel } from '../../highlights/HighlightPlayer';
+import { highlightTone } from '../../sim/career';
 import { hasTripleCrown, TIER_INFO } from '../../sim/legacy';
 import { formatMoney } from '../../sim/market';
 import type { HighlightSpec } from '../../sim/types';
 import { useGame, useWorld } from '../../state/store';
 import { Confetti } from '../../ui/Confetti';
+import { HighlightRows, PlayAllChip, type HighlightItem } from '../../ui/HighlightList';
 import { Icon } from '../../ui/Icon';
-import { Btn, Card, Header, Pill, Press, Screen, SectionTitle, Txt } from '../../ui/kit';
+import { Btn, Card, Header, Pill, Screen, SectionTitle, Txt } from '../../ui/kit';
 import { C, R, S, shade, withAlpha } from '../../ui/theme';
 import { CareerTimeline } from '../../ui/Timeline';
 
@@ -39,7 +41,7 @@ export default function CareerDetail() {
   const { id, fresh } = useLocalSearchParams<{ id: string; fresh?: string }>();
   const rec = useGame((s) => s.archive[id]);
   const world = useWorld();
-  const [replay, setReplay] = useState<HighlightSpec | null>(null);
+  const [reel, setReel] = useState<{ specs: HighlightSpec[]; start: number } | null>(null);
   if (!rec) {
     return (
       <Screen header={<Header title="Archive" />}>
@@ -56,10 +58,20 @@ export default function CareerDetail() {
   const t = rec.totals;
   const tc = hasTripleCrown(t.specials);
   const isFresh = fresh === '1';
-  const highlights = [...rec.highlights].sort((a, b) => ((b as { importance?: number }).importance ?? 0) - ((a as { importance?: number }).importance ?? 0)).slice(0, 12);
+  // Best and worst moments: the most important clips of each kind, told in order.
+  const scored: HighlightItem[] = rec.highlights.map((h) => ({ ...h, tone: h.tone ?? highlightTone(h.spec) }));
+  const pick = (list: HighlightItem[], n: number) =>
+    list
+      .map((h, i) => ({ h, i, imp: rec.highlights[i]?.importance ?? 1 }))
+      .sort((x, y) => y.imp - x.imp)
+      .slice(0, n)
+      .sort((x, y) => x.i - y.i)
+      .map((x) => x.h);
+  const glory = pick(scored.map((h) => (h.tone === 'bad' ? null : h)).filter(Boolean) as HighlightItem[], 8);
+  const heartbreak = pick(scored.filter((h) => h.tone === 'bad'), 5);
   const openHighlight = (hid: string) => {
     const h = rec.highlights.find((x) => x.id === hid);
-    if (h) setReplay(h.spec);
+    if (h) setReel({ specs: [h.spec], start: 0 });
   };
 
   return (
@@ -163,27 +175,17 @@ export default function CareerDetail() {
         </View>
       </Card>
 
-      {highlights.length ? (
+      {glory.length ? (
         <>
-          <SectionTitle title="Highlight reel" />
-          <View style={{ gap: 6 }}>
-            {highlights.map((h) => (
-              <Press key={h.id} onPress={() => setReplay(h.spec)} scale={0.98}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, padding: 12, borderRadius: R.md, borderWidth: 1, borderColor: C.line }}>
-                  <Icon name="film" color={C.red} />
-                  <View style={{ flex: 1 }}>
-                    <Txt v="h3" numberOfLines={1}>
-                      {h.spec.caption}
-                    </Txt>
-                    <Txt v="small" color={C.textDim} numberOfLines={1}>
-                      {h.year} · {h.trackName}
-                    </Txt>
-                  </View>
-                  <Icon name="play" color={C.text} size={16} />
-                </View>
-              </Press>
-            ))}
-          </View>
+          <SectionTitle title="Glory reel" right={glory.length > 1 ? <PlayAllChip onPress={() => setReel({ specs: glory.map((h) => h.spec), start: 0 })} /> : undefined} />
+          <HighlightRows items={glory} onPlay={(i) => setReel({ specs: glory.map((h) => h.spec), start: i })} />
+        </>
+      ) : null}
+
+      {heartbreak.length ? (
+        <>
+          <SectionTitle title="Heartbreak reel" right={heartbreak.length > 1 ? <PlayAllChip onPress={() => setReel({ specs: heartbreak.map((h) => h.spec), start: 0 })} /> : undefined} />
+          <HighlightRows items={heartbreak} onPlay={(i) => setReel({ specs: heartbreak.map((h) => h.spec), start: i })} />
         </>
       ) : null}
 
@@ -215,7 +217,7 @@ export default function CareerDetail() {
           Last raced in {seriesDef(last.series).name} with {last.teamName}
         </Txt>
       ) : null}
-      {replay ? <HighlightPlayer spec={replay} onDone={() => setReplay(null)} /> : null}
+      {reel ? <HighlightReel specs={reel.specs} start={reel.start} onClose={() => setReel(null)} /> : null}
     </Screen>
   );
 }

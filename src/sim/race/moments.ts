@@ -59,6 +59,8 @@ export interface MomentHighlight {
   actors: number[];
   caption: string;
   sub?: string;
+  /** Engine step the moment happened on (defaults to the current step). */
+  step?: number;
 }
 
 export interface MomentResolution {
@@ -465,6 +467,13 @@ export class MomentDirector {
   // -------------------------------------------------------------------------
 
   resolve(m: Moment, optionId: string): MomentResolution {
+    const res = this.resolveOption(m, optionId);
+    // Stamp when it happened so saved clips show the right lap.
+    if (res.highlight && res.highlight.step === undefined) res.highlight.step = this.engine.step + 1;
+    return res;
+  }
+
+  private resolveOption(m: Moment, optionId: string): MomentResolution {
     const e = this.engine;
     const p = e.playerIndex;
     const r = this.rng;
