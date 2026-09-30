@@ -93,7 +93,7 @@ function Caption({ prog, at, caption, sub, color }: { prog: SharedValue<number>;
     return { opacity: t, transform: [{ translateX: (1 - t) * -30 }] };
   });
   return (
-    <View pointerEvents="none" style={{ gap: 6 }}>
+    <View style={{ pointerEvents: 'none', gap: 6 }}>
       <Animated.View style={[{ alignSelf: 'flex-start', backgroundColor: color, paddingHorizontal: 16, paddingVertical: 6, maxWidth: '100%' }, style]}>
         <Txt v="display" color="#FFFFFF" style={{ fontSize: 32, lineHeight: 36 }} numberOfLines={2}>
           {caption}
@@ -286,9 +286,9 @@ export function HighlightPlayer({
         {/* Camera */}
         <View style={{ width: W, height: H, overflow: 'hidden' }}>
           {scene}
-          <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: '#FFFFFF' }, flash]} />
-          <LinearGradient pointerEvents="none" colors={['rgba(4,6,11,0.55)', 'rgba(4,6,11,0)']} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 26 }} />
-          <LinearGradient pointerEvents="none" colors={['rgba(4,6,11,0)', 'rgba(4,6,11,0.7)']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 40 }} />
+          <Animated.View style={[{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: '#FFFFFF' }, flash]} />
+          <LinearGradient colors={['rgba(4,6,11,0.55)', 'rgba(4,6,11,0)']} style={{ pointerEvents: 'none', position: 'absolute', left: 0, right: 0, top: 0, height: 26 }} />
+          <LinearGradient colors={['rgba(4,6,11,0)', 'rgba(4,6,11,0.7)']} style={{ pointerEvents: 'none', position: 'absolute', left: 0, right: 0, bottom: 0, height: 40 }} />
         </View>
 
         {/* Lower third */}

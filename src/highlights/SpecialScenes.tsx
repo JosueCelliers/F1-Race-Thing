@@ -24,11 +24,15 @@ import { kf, seeded } from './kit';
 // ---------------------------------------------------------------------------
 
 function Light({ prog, on }: { prog: SharedValue<number>; on: number }) {
-  const style = useAnimatedStyle(() => {
-    const lit = prog.value >= on && prog.value < 0.62;
-    return { backgroundColor: lit ? '#FF1E2D' : '#2A0A0E', shadowOpacity: lit ? 0.9 : 0 };
-  });
-  return <Animated.View style={[{ width: 20, height: 20, borderRadius: 10, shadowColor: '#FF1E2D', shadowRadius: 10, shadowOffset: { width: 0, height: 0 } }, style]} />;
+  // A dark lamp with a glowing lit layer on top whose opacity switches on.
+  const style = useAnimatedStyle(() => ({ opacity: prog.value >= on && prog.value < 0.62 ? 1 : 0 }));
+  return (
+    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: '#2A0A0E' }}>
+      <Animated.View
+        style={[{ position: 'absolute', left: 0, top: 0, width: 20, height: 20, borderRadius: 10, backgroundColor: '#FF1E2D', boxShadow: '0px 0px 10px rgba(255, 30, 45, 0.9)' }, style]}
+      />
+    </View>
+  );
 }
 
 function GridCar({ prog, x, y, launch, children }: { prog: SharedValue<number>; x: number; y: number; launch: number; children: React.ReactNode }) {

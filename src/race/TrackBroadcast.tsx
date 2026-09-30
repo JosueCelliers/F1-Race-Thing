@@ -71,8 +71,8 @@ function CarDot({ i, entry, prog, seg, samples, count, scale, tx, ty, size, high
   const ring = highlight === 'player' ? '#FFFFFF' : highlight === 'rival' ? C.red : entry.colors.secondary;
   return (
     <Animated.View
-      pointerEvents="none"
       style={[
+        { pointerEvents: 'none' },
         {
           position: 'absolute',
           left: 0,
@@ -85,11 +85,7 @@ function CarDot({ i, entry, prog, seg, samples, count, scale, tx, ty, size, high
           borderColor: ring,
           alignItems: 'center',
           justifyContent: 'center',
-          shadowColor: highlight === 'player' ? '#FFFFFF' : '#000000',
-          shadowOpacity: highlight === 'player' ? 0.9 : 0.5,
-          shadowRadius: highlight === 'player' ? 8 : 3,
-          shadowOffset: { width: 0, height: 1 },
-          elevation: highlight === 'player' ? 6 : 2,
+          boxShadow: highlight === 'player' ? '0px 1px 8px rgba(255, 255, 255, 0.9)' : '0px 1px 3px rgba(0, 0, 0, 0.5)',
         },
         style,
       ]}

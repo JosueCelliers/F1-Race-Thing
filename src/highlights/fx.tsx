@@ -126,7 +126,7 @@ export function Particles({ prog, emitters }: { prog: SharedValue<number>; emitt
     return out;
   }, [emitters]);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+    <View style={{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
       {parts.map((x) => (
         <Particle key={x.key} p={x.p} e={x.e} prog={prog} />
       ))}
@@ -141,7 +141,7 @@ export function SpeedLines({ prog, W, H, intensity = 1, y0 = 0 }: { prog: Shared
     return Array.from({ length: 14 }, () => ({ y: y0 + r() * H, w: 40 + r() * 120, speed: 3 + r() * 5, off: r() }));
   }, [H, y0]);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H + y0 }}>
+    <View style={{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, width: W, height: H + y0 }}>
       {lines.map((l, i) => (
         <SpeedLine key={i} l={l} prog={prog} W={W} intensity={intensity} />
       ))}
@@ -164,7 +164,7 @@ export function Rain({ prog, W, H, density = 40 }: { prog: SharedValue<number>; 
     return Array.from({ length: density }, () => ({ x: r() * W * 1.3, off: r(), len: 10 + r() * 16, speed: 5 + r() * 4 }));
   }, [W, density]);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, overflow: 'hidden' }}>
+    <View style={{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, width: W, height: H, overflow: 'hidden' }}>
       {drops.map((d, i) => (
         <Drop key={i} d={d} prog={prog} H={H} />
       ))}

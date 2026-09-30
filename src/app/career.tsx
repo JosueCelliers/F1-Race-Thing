@@ -190,11 +190,11 @@ export default function CareerHub() {
 
           {s && ss ? (
             <>
-              <SectionTitle title="Championship" right={<Pill label={`P${myPos || '-'} · ${myPts} pts`} color={C.surface3} />} />
+              <SectionTitle title="Championship" right={<Pill label={ss.round === 0 ? `${ss.calendar.length} rounds` : `P${myPos || '-'} · ${myPts} pts`} color={C.surface3} />} />
               <Card padded={false} style={{ padding: 6 }}>
                 <StandingsTable world={world} seriesId={s.id} highlight={me.id} limit={6} compact />
               </Card>
-              {myPos > 1 ? (
+              {myPos > 1 && ss.round > 0 ? (
                 <Txt v="small" color={C.textDim} style={{ marginTop: 6, textAlign: 'center' }}>
                   {leaderPts - myPts} points behind the leader · {ss.calendar.length - ss.round} round{ss.calendar.length - ss.round === 1 ? '' : 's'} left
                 </Txt>

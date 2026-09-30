@@ -544,7 +544,7 @@ function Live({
       </View>
 
       {toast && !moment && !highlight ? (
-        <Animated.View entering={FadeInDown} style={{ position: 'absolute', top: insets.top + 56 + mapH - 40, left: S.md, right: S.md, alignItems: 'center' }} pointerEvents="none">
+        <Animated.View entering={FadeInDown} style={{ pointerEvents: 'none', position: 'absolute', top: insets.top + 56 + mapH - 40, left: S.md, right: S.md, alignItems: 'center' }}>
           <View style={{ backgroundColor: withAlpha('#000000', 0.8), borderRadius: R.pill, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: withAlpha(C.gold, 0.5) }}>
             <Txt v="small" color={C.gold} style={{ fontFamily: F.bodySemi }} numberOfLines={1}>
               {toast}
@@ -599,7 +599,7 @@ function RainOverlay({ width, height }: { width: number; height: number }) {
     return Array.from({ length: 34 }, () => ({ x: rng.float(0, width), y: rng.float(0, height), l: rng.float(8, 22) }));
   }, [width, height]);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height, opacity: 0.35 }}>
+    <View style={{ pointerEvents: 'none', position: 'absolute', top: 0, left: 0, width, height, opacity: 0.35 }}>
       {streaks.map((s, i) => (
         <View key={i} style={{ position: 'absolute', left: s.x, top: s.y, width: 1.2, height: s.l, backgroundColor: '#BFE3FF', transform: [{ rotate: '14deg' }] }} />
       ))}

@@ -321,7 +321,7 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
 
 export function Backdrop({ tint = C.red }: { tint?: string }) {
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       <LinearGradient colors={[C.bg2, C.bg, '#04050A']} style={StyleSheet.absoluteFill} />
       <LinearGradient colors={[withAlpha(tint, 0.2), 'transparent']} start={{ x: 1, y: 0 }} end={{ x: 0.2, y: 0.5 }} style={StyleSheet.absoluteFill} />
       <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">

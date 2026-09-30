@@ -419,7 +419,7 @@ export function SideScene({ spec, prog, W, H }: { spec: HighlightSpec; prog: Sha
       })}
       <Particles prog={prog} emitters={emitters} />
       {wet ? <Rain prog={prog} W={W} H={H} density={46} /> : null}
-      {night ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: 'rgba(5,10,30,0.18)' }} /> : null}
+      {night ? <View style={{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, width: W, height: H, backgroundColor: 'rgba(5,10,30,0.18)' }} /> : null}
     </View>
   );
 }

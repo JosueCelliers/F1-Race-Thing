@@ -224,7 +224,7 @@ export function SpinWheel({ slices, size = 320, request, onDone, onPressHub, fas
       </Svg>
       {/* Bulbs */}
       {[bulbsA, bulbsB].map((st, k) => (
-        <Animated.View key={k} style={[{ position: 'absolute', width: size, height: size }, st]} pointerEvents="none">
+        <Animated.View key={k} style={[{ position: 'absolute', width: size, height: size }, st, { pointerEvents: 'none' }]}>
           <Svg width={size} height={size} viewBox={`0 0 ${R * 2} ${R * 2}`}>
             {Array.from({ length: bulbCount / 2 }, (_, j) => {
               const i = j * 2 + k;
@@ -253,11 +253,7 @@ export function SpinWheel({ slices, size = 320, request, onDone, onPressHub, fas
             borderColor: '#FFFFFF',
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOpacity: 0.5,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 8,
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)',
           }}
         >
           <Txt v="h2" style={{ fontFamily: F.display, fontSize: size * 0.065, lineHeight: size * 0.072 }}>
@@ -266,7 +262,7 @@ export function SpinWheel({ slices, size = 320, request, onDone, onPressHub, fas
         </View>
       </Press>
       {/* Pointer */}
-      <Animated.View style={[{ position: 'absolute', top: 0, alignItems: 'center' }, pointerStyle]} pointerEvents="none">
+      <Animated.View style={[{ position: 'absolute', top: 0, alignItems: 'center' }, pointerStyle, { pointerEvents: 'none' }]}>
         <Svg width={size * 0.13} height={size * 0.16} viewBox="0 0 60 74">
           <Path d="M30 72 L6 26 A26 26 0 1 1 54 26Z" fill={shade(C.red, -0.35)} transform="translate(0 2)" />
           <Path d="M30 70 L6 24 A26 26 0 1 1 54 24Z" fill={C.red} stroke="#FFFFFF" strokeWidth={4} />

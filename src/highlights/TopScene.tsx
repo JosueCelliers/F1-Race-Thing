@@ -381,7 +381,7 @@ export function TopScene({ spec, prog, W: VW, H: VH }: { spec: HighlightSpec; pr
           <Particles prog={prog} emitters={setup.emitters} />
         </Animated.View>
         {spec.wet ? <Rain prog={prog} W={VW} H={VH} density={34} /> : null}
-        {night ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: VW, height: VH, backgroundColor: 'rgba(5,10,30,0.25)' }} /> : null}
+        {night ? <View style={{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, width: VW, height: VH, backgroundColor: 'rgba(5,10,30,0.25)' }} /> : null}
       </Animated.View>
     </View>
   );

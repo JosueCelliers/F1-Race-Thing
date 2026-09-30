@@ -59,7 +59,7 @@ export function Confetti({ count = 60, burst = 0 }: { count?: number; burst?: nu
     }));
   }, [count, width, burst]);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+    <View style={{ pointerEvents: 'none', position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
       {pieces.map(({ key, ...p }) => (
         <Piece key={key} {...p} height={height} />
       ))}

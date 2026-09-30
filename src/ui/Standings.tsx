@@ -9,7 +9,10 @@ import { C, withAlpha } from './theme';
 export function StandingsTable({ world, seriesId, highlight, limit, compact }: { world: World; seriesId: string; highlight?: string; limit?: number; compact?: boolean }) {
   const ss = world.season.series[seriesId];
   if (!ss) return null;
-  const all = standings(ss).filter((r) => r.races > 0 || ss.round === 0);
+  // Before the first round there is no order yet: show the entry list, fastest teams first.
+  const preSeason = ss.round === 0;
+  const table = standings(ss).filter((r) => r.races > 0 || preSeason);
+  const all = preSeason ? [...table].sort((x, y) => (world.teams[y.teamId]?.perf ?? 0) - (world.teams[x.teamId]?.perf ?? 0)) : table;
   let rows = all;
   const leader = rows[0]?.points ?? 0;
   if (limit && rows.length > limit) {
@@ -41,7 +44,15 @@ export function StandingsTable({ world, seriesId, highlight, limit, compact }: {
               borderColor: withAlpha(C.red, 0.5),
             }}
           >
-            <PosBadge pos={pos} size={26} />
+            {preSeason ? (
+              <View style={{ width: 26, height: 26, borderRadius: 7, backgroundColor: C.surface3, alignItems: 'center', justifyContent: 'center' }}>
+                <Txt v="num" style={{ fontSize: 11 }} color={C.textDim}>
+                  {d.number}
+                </Txt>
+              </View>
+            ) : (
+              <PosBadge pos={pos} size={26} />
+            )}
             <View style={{ width: 3, height: 22, borderRadius: 2, backgroundColor: team?.colors.primary ?? C.textMute }} />
             <Flag id={d.nation} width={20} />
             <View style={{ flex: 1 }}>
@@ -57,8 +68,8 @@ export function StandingsTable({ world, seriesId, highlight, limit, compact }: {
               ) : null}
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Txt v="num">{r.points}</Txt>
-              {!compact && pos > 1 ? (
+              {preSeason ? null : <Txt v="num">{r.points}</Txt>}
+              {!compact && pos > 1 && !preSeason ? (
                 <Txt v="small" color={C.textMute}>
                   -{leader - r.points}
                 </Txt>
