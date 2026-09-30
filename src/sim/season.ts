@@ -9,30 +9,8 @@ import type { ChampionRecord, Driver, ID, RoundDef, RoundResult, SeriesSeason, T
 // Naming & calendars
 // ---------------------------------------------------------------------------
 
-const PREFIXES = [
-  "Circuit de l'",
-  'Circuit de la ',
-  'Circuit des ',
-  'Circuit du ',
-  'Circuit de ',
-  'Autodromo di ',
-  'Autódromo ',
-  'Autodromo ',
-  'Circuito ',
-];
-const SUFFIXES = [
-  ' International Circuit',
-  ' Street Circuit',
-  ' Night Circuit',
-  ' Motor Speedway',
-  ' Superspeedway',
-  ' Road Course',
-  ' Speedway',
-  ' Raceway',
-  ' Circuit',
-  ' Park',
-  ' Ring',
-];
+const PREFIXES = ["Circuit de l'", 'Circuit de la ', 'Circuit des ', 'Circuit du ', 'Circuit de ', 'Autodromo di ', 'Autódromo ', 'Autodromo ', 'Circuito '];
+const SUFFIXES = [' International Circuit', ' Street Circuit', ' Night Circuit', ' Motor Speedway', ' Superspeedway', ' Road Course', ' Speedway', ' Raceway', ' Circuit', ' Park', ' Ring'];
 
 export function trackShortName(t: TrackDef): string {
   let n = t.name;
@@ -207,13 +185,7 @@ export function quickRace(world: World, seriesId: string, roundIdx: number, rng:
     const quali = carImp * team.perf + (1 - carImp) * (d.skills.pace * (1 - wet * 0.6) + d.skills.wet * wet * 0.6) + rng.normal(0, 2.2);
     const lengthMult = endurance ? 1.2 + (round.hours ?? 6) / 12 : round.laps > 100 ? 1.4 : 1;
     const pMech = ((100 - team.reliability) / 100) * 0.22 * lengthMult;
-    const pCrash =
-      0.028 *
-      (1.55 - d.skills.consistency / 100) *
-      (0.6 + t.danger) *
-      (0.7 + d.aggression / 120) *
-      (1 + wet * 0.8) *
-      (endurance ? 0.8 : 1);
+    const pCrash = 0.028 * (1.55 - d.skills.consistency / 100) * (0.6 + t.danger) * (0.7 + d.aggression / 120) * (1 + wet * 0.8) * (endurance ? 0.8 : 1);
     const dnfRoll = rng.next();
     const dnf = dnfRoll < pMech ? 'mech' : dnfRoll < pMech + pCrash ? 'crash' : undefined;
     return { e, d, perf, quali, dnf, score: 0 };

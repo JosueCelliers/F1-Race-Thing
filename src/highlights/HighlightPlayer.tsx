@@ -132,7 +132,18 @@ function ActorStrip({ actors, kind, prog }: { actors: HighlightActor[]; kind: st
               vs
             </Txt>
           ) : null}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingRight: 10, borderRadius: 10, backgroundColor: withAlpha(a.colors.primary, 0.16), borderWidth: 1, borderColor: withAlpha(a.colors.primary, 0.55) }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingRight: 10,
+              borderRadius: 10,
+              backgroundColor: withAlpha(a.colors.primary, 0.16),
+              borderWidth: 1,
+              borderColor: withAlpha(a.colors.primary, 0.55),
+            }}
+          >
             <Helmet design={a.helmet} size={36} />
             <View>
               <Txt v="label" color={a.isPlayer ? C.gold : C.textDim} style={{ fontSize: 9.5 }}>
@@ -241,7 +252,7 @@ export function HighlightPlayer({
               </Txt>
             </View>
             <Txt v="label" color={series ? accent : C.textDim} style={{ fontSize: 11, flex: 1 }} numberOfLines={1}>
-              {series ? series.name : KIND_LABEL[spec.kind] ?? 'Highlight'}
+              {series ? series.name : (KIND_LABEL[spec.kind] ?? 'Highlight')}
             </Txt>
             {inReel ? (
               <Txt v="num" color={C.textDim} style={{ fontSize: 14 }}>

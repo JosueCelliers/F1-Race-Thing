@@ -165,7 +165,7 @@ export function Btn({
   small?: boolean;
   testID?: string;
 }) {
-  const base = kind === 'primary' ? C.red : kind === 'gold' ? C.gold : kind === 'danger' ? '#8B1E2B' : kind === 'team' ? color ?? C.red : C.surface3;
+  const base = kind === 'primary' ? C.red : kind === 'gold' ? C.gold : kind === 'danger' ? '#8B1E2B' : kind === 'team' ? (color ?? C.red) : C.surface3;
   const fg = kind === 'ghost' ? C.text : readableOn(base);
   const gradient: [string, string] = kind === 'ghost' ? ['transparent', 'transparent'] : [shade(base, 0.12), shade(base, -0.18)];
   return (
@@ -197,9 +197,32 @@ export function Btn({
   );
 }
 
-export function IconBtn({ icon, onPress, size = 40, color = C.text, bg = C.surface2, style, label, testID }: { icon: IconName; onPress?: () => void; size?: number; color?: string; bg?: string; style?: StyleProp<ViewStyle>; label?: string; testID?: string }) {
+export function IconBtn({
+  icon,
+  onPress,
+  size = 40,
+  color = C.text,
+  bg = C.surface2,
+  style,
+  label,
+  testID,
+}: {
+  icon: IconName;
+  onPress?: () => void;
+  size?: number;
+  color?: string;
+  bg?: string;
+  style?: StyleProp<ViewStyle>;
+  label?: string;
+  testID?: string;
+}) {
   return (
-    <Press onPress={onPress} label={label ?? icon} testID={testID} style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }, style]}>
+    <Press
+      onPress={onPress}
+      label={label ?? icon}
+      testID={testID}
+      style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }, style]}
+    >
       <Icon name={icon} size={size * 0.5} color={color} />
     </Press>
   );
@@ -350,9 +373,7 @@ export function Screen({
   padded?: boolean;
 }) {
   const insets = useSafeAreaInsets();
-  const inner = (
-    <View style={[padded && { paddingHorizontal: S.lg }, { paddingBottom: footer ? S.lg : insets.bottom + S.xl }, contentStyle]}>{children}</View>
-  );
+  const inner = <View style={[padded && { paddingHorizontal: S.lg }, { paddingBottom: footer ? S.lg : insets.bottom + S.xl }, contentStyle]}>{children}</View>;
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <Backdrop tint={tint} />

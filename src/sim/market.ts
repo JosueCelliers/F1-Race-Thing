@@ -60,7 +60,9 @@ export function playerEligible(d: Driver, s: SeriesDef, nextYear: number, wasCha
     case 'apex':
       return !!last && (['contender', 'apex', 'prime'].includes(last) || (last === 'cadet' && wasChampion));
     case 'prime':
-      return !!last && (['apex', 'prime'].includes(last) || (overall(d.skills) >= 76 && ['endurance', 'american', 'gt'].includes(last)) || (last === 'contender' && wasChampion && overall(d.skills) >= 74));
+      return (
+        !!last && (['apex', 'prime'].includes(last) || (overall(d.skills) >= 76 && ['endurance', 'american', 'gt'].includes(last)) || (last === 'contender' && wasChampion && overall(d.skills) >= 74))
+      );
     case 'endurance':
       return age >= 19;
     case 'american':
@@ -214,9 +216,7 @@ export function computeOffers(world: World): Offer[] {
   const wasChampion = !!lastLog && lastLog.year === world.year && lastLog.pos === 1;
   const contractValid = !!player.contract && player.contract.until >= nextYear;
   const currentTeam = player.contract?.team;
-  const pool = Object.values(world.drivers).filter(
-    (d) => d.status !== 'retired' && d.id !== player.id && !d.careerId && (!d.contract || d.contract.until < nextYear),
-  );
+  const pool = Object.values(world.drivers).filter((d) => d.status !== 'retired' && d.id !== player.id && !d.careerId && (!d.contract || d.contract.until < nextYear));
   const offers: Offer[] = [];
   const fam = family(player.family);
   const wallet = a.money + fam.budget;
@@ -317,12 +317,8 @@ export function computeOffers(world: World): Offer[] {
 
   // Keep the list focused: renewals first, then by seat quality.
   const renewal = offers.filter((o) => o.kind === 'renewal');
-  const regular = offers
-    .filter((o) => o.kind === 'offer')
-    .sort((x, y) => seatAttractiveness(world.teams[y.team]) - seatAttractiveness(world.teams[x.team]));
-  const pay = offers
-    .filter((o) => o.kind === 'paySeat')
-    .sort((x, y) => seatAttractiveness(world.teams[y.team]) - seatAttractiveness(world.teams[x.team]));
+  const regular = offers.filter((o) => o.kind === 'offer').sort((x, y) => seatAttractiveness(world.teams[y.team]) - seatAttractiveness(world.teams[x.team]));
+  const pay = offers.filter((o) => o.kind === 'paySeat').sort((x, y) => seatAttractiveness(world.teams[y.team]) - seatAttractiveness(world.teams[x.team]));
   // Ensure variety across categories: max 2 offers per series.
   const perSeries: Record<string, number> = {};
   const picked: Offer[] = [];

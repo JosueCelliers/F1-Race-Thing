@@ -51,7 +51,19 @@ export function HighlightRows({ items, onPlay, meta = 'track' }: { items: Highli
 export function PlayAllChip({ onPress, label = 'Play all' }: { onPress: () => void; label?: string }) {
   return (
     <Press onPress={onPress} feedback="tick" label={label}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.pill, backgroundColor: C.surface3, borderWidth: 1, borderColor: C.lineStrong }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 5,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          borderRadius: R.pill,
+          backgroundColor: C.surface3,
+          borderWidth: 1,
+          borderColor: C.lineStrong,
+        }}
+      >
         <Icon name="play" size={12} color={C.text} />
         <Txt v="label" style={{ fontSize: 10.5 }}>
           {label}

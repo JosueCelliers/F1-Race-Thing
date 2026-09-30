@@ -87,24 +87,7 @@ export interface CarState {
   startMod: number;
 }
 
-export type RaceEventKind =
-  | 'overtake'
-  | 'crash'
-  | 'collision'
-  | 'mech'
-  | 'pit'
-  | 'sc'
-  | 'scEnd'
-  | 'rain'
-  | 'dry'
-  | 'fastest'
-  | 'mistake'
-  | 'spin'
-  | 'lead'
-  | 'penalty'
-  | 'start'
-  | 'finish'
-  | 'info';
+export type RaceEventKind = 'overtake' | 'crash' | 'collision' | 'mech' | 'pit' | 'sc' | 'scEnd' | 'rain' | 'dry' | 'fastest' | 'mistake' | 'spin' | 'lead' | 'penalty' | 'start' | 'finish' | 'info';
 
 export interface RaceEvent {
   step: number;
@@ -333,7 +316,7 @@ export class RaceEngine {
     }
     frac += this.wet * 0.09;
     frac += c.damage;
-    frac -= (this.step * this.lapsPerStep) * 0.00018;
+    frac -= this.step * this.lapsPerStep * 0.00018;
     return this.refLap * (1 + frac);
   }
 
@@ -453,7 +436,7 @@ export class RaceEngine {
         }
         c.pitNext = undefined;
         if (this.isPlayer(i) || (this.pitRule !== 'endurance' && this.pitRule !== 'fuel')) {
-          this.log({ kind: 'pit', a: i, text: `${this.name(i)} pits for ${tyreName(newTyre)} (${(loss).toFixed(1)}s)`, player: this.isPlayer(i) });
+          this.log({ kind: 'pit', a: i, text: `${this.name(i)} pits for ${tyreName(newTyre)} (${loss.toFixed(1)}s)`, player: this.isPlayer(i) });
         }
       }
       if (c.penalty > 0) {
@@ -656,13 +639,7 @@ export class RaceEngine {
           (ca.tyreAge - cb.tyreAge) * 0.003 +
           (this.restart ? 0.1 : 0);
         pPass = clamp(pPass, 0.04, 0.92);
-        const pColl =
-          0.011 *
-          ((eb.aggression + ea.aggression) / 100) *
-          (1.6 - (eb.skills.consistency + ea.skills.consistency) / 200) *
-          (0.55 + t.danger) *
-          (1 + this.wet * 0.8) *
-          pb.incidentMult;
+        const pColl = 0.011 * ((eb.aggression + ea.aggression) / 100) * (1.6 - (eb.skills.consistency + ea.skills.consistency) / 200) * (0.55 + t.danger) * (1 + this.wet * 0.8) * pb.incidentMult;
         const roll = r.next();
         const involvesPlayer = eb.isPlayer || ea.isPlayer;
         if (roll < pColl) {
@@ -868,5 +845,11 @@ export function makeWeather(track: TrackDef, steps: number, rng: Rng, forceWet =
   }
   // Brief shower
   const at = Math.round(steps * rng.float(0.25, 0.6));
-  return { initial: 0, changes: [{ step: at, target: rng.float(0.35, 0.6) }, { step: at + rng.int(2, 4), target: 0 }] };
+  return {
+    initial: 0,
+    changes: [
+      { step: at, target: rng.float(0.35, 0.6) },
+      { step: at + rng.int(2, 4), target: 0 },
+    ],
+  };
 }

@@ -17,7 +17,16 @@ function SeriesChips({ value, onChange }: { value: string; onChange: (s: string)
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: S.md }} contentContainerStyle={{ gap: 6 }}>
       {SERIES.map((s) => (
         <Press key={s.id} onPress={() => onChange(s.id)} feedback="tick">
-          <View style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: R.pill, backgroundColor: value === s.id ? s.color : C.surface, borderWidth: 1, borderColor: value === s.id ? s.color : C.line }}>
+          <View
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: R.pill,
+              backgroundColor: value === s.id ? s.color : C.surface,
+              borderWidth: 1,
+              borderColor: value === s.id ? s.color : C.line,
+            }}
+          >
             <Txt v="label" color={value === s.id ? '#FFFFFF' : C.textDim}>
               {s.short}
             </Txt>
@@ -85,7 +94,10 @@ export default function WorldScreen() {
               </Txt>
             ) : null}
             {champs.map((c) => (
-              <View key={`${c.year}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, backgroundColor: c.isPlayer ? withAlpha(C.gold, 0.14) : 'transparent' }}>
+              <View
+                key={`${c.year}`}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, backgroundColor: c.isPlayer ? withAlpha(C.gold, 0.14) : 'transparent' }}
+              >
                 <Txt v="num" color={C.textDim} style={{ width: 44 }}>
                   {c.year}
                 </Txt>
@@ -104,7 +116,10 @@ export default function WorldScreen() {
           </Card>
           <SectionTitle title="Crown jewels" />
           {SPECIAL_EVENTS.map((sp) => {
-            const wins = world.specialWinners.filter((w) => w.special === sp.id).sort((a, b) => b.year - a.year).slice(0, 5);
+            const wins = world.specialWinners
+              .filter((w) => w.special === sp.id)
+              .sort((a, b) => b.year - a.year)
+              .slice(0, 5);
             return (
               <Card key={sp.id} style={{ marginBottom: S.sm }}>
                 <Txt v="h3">
@@ -165,7 +180,7 @@ export default function WorldScreen() {
                     {x.d.careerId ? ' ★' : ''}
                   </Txt>
                   <Txt v="small" color={C.textMute}>
-                    {x.titles} titles ({x.primeTitles} Prime) · {x.wins} wins · {x.d.status === 'retired' ? 'retired' : 'active'}
+                    {legendLine(x.titles, x.primeTitles, x.wins)} · {x.d.status === 'retired' ? 'retired' : 'active'}
                   </Txt>
                 </View>
               </View>
@@ -182,7 +197,10 @@ export default function WorldScreen() {
             </Txt>
           ) : null}
           {world.news.map((n) => (
-            <View key={n.id} style={{ flexDirection: 'row', gap: 10, backgroundColor: C.surface, borderRadius: R.md, padding: 12, borderWidth: 1, borderColor: n.important ? withAlpha(C.gold, 0.4) : C.line }}>
+            <View
+              key={n.id}
+              style={{ flexDirection: 'row', gap: 10, backgroundColor: C.surface, borderRadius: R.md, padding: 12, borderWidth: 1, borderColor: n.important ? withAlpha(C.gold, 0.4) : C.line }}
+            >
               <Txt v="num" color={C.textDim} style={{ width: 40, fontSize: 14 }}>
                 {n.year}
               </Txt>
@@ -195,4 +213,11 @@ export default function WorldScreen() {
       ) : null}
     </Screen>
   );
+}
+
+function legendLine(titles: number, prime: number, wins: number): string {
+  const parts: string[] = [];
+  if (titles) parts.push(`${titles} title${titles === 1 ? '' : 's'}${prime ? (prime === titles ? ' (all Prime)' : ` (${prime} Prime)`) : ''}`);
+  parts.push(`${wins} win${wins === 1 ? '' : 's'}`);
+  return parts.join(' · ');
 }

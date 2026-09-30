@@ -60,7 +60,15 @@ export const POS_COLORS = [C.gold, C.silver, C.bronze];
 /** Slightly lighten/darken a hex colour (-1..1). */
 export function shade(hex: string, amt: number): string {
   const h = hex.replace('#', '');
-  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6), 16);
+  const n = parseInt(
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h.slice(0, 6),
+    16,
+  );
   let r = (n >> 16) & 255;
   let g = (n >> 8) & 255;
   let b = n & 255;
@@ -78,14 +86,30 @@ export function shade(hex: string, amt: number): string {
 
 export function withAlpha(hex: string, a: number): string {
   const h = hex.replace('#', '');
-  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6), 16);
+  const n = parseInt(
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h.slice(0, 6),
+    16,
+  );
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
 /** Relative luminance (0..1) — pick readable text on coloured backgrounds. */
 export function luminance(hex: string): number {
   const h = hex.replace('#', '');
-  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6), 16);
+  const n = parseInt(
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h.slice(0, 6),
+    16,
+  );
   const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
     const c = v / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);

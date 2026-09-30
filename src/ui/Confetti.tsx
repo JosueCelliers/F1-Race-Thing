@@ -5,7 +5,27 @@ import { mixSeed, Rng } from '../sim/rng';
 
 const COLORS = ['#FFC940', '#FF2D46', '#3BA7FF', '#24D17E', '#FFFFFF', '#A874FF', '#FF8A1F'];
 
-function Piece({ x, delay, color, w, h, drift, spin, height, duration }: { x: number; delay: number; color: string; w: number; h: number; drift: number; spin: number; height: number; duration: number }) {
+function Piece({
+  x,
+  delay,
+  color,
+  w,
+  h,
+  drift,
+  spin,
+  height,
+  duration,
+}: {
+  x: number;
+  delay: number;
+  color: string;
+  w: number;
+  h: number;
+  drift: number;
+  spin: number;
+  height: number;
+  duration: number;
+}) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withDelay(delay, withTiming(1, { duration, easing: Easing.in(Easing.quad) }));

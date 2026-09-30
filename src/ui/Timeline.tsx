@@ -65,7 +65,18 @@ export function CareerTimeline({
             </View>
             <View style={{ flex: 1, paddingBottom: 16, gap: 6 }}>
               {sd ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderRadius: R.md, padding: 10, borderWidth: 1, borderColor: s?.champion ? withAlpha(C.gold, 0.6) : C.line }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                    backgroundColor: C.surface,
+                    borderRadius: R.md,
+                    padding: 10,
+                    borderWidth: 1,
+                    borderColor: s?.champion ? withAlpha(C.gold, 0.6) : C.line,
+                  }}
+                >
                   <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: s?.colors.primary ?? sd.color }} />
                   <View style={{ flex: 1 }}>
                     <Txt v="label" color={sd.color}>

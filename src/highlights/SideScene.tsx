@@ -40,35 +40,99 @@ export function sideScenario(kind: string): Scenario {
     case 'overtake':
       return {
         cars: [
-          { actor: 0, lane: 1, x: [[0, 0.0], [0.25, 0.06], [0.62, 0.42], [1, 0.46]] },
-          { actor: 1, lane: 0, x: [[0, 0.32], [0.3, 0.3], [0.62, 0.2], [1, 0.08]] },
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, 0.0],
+              [0.25, 0.06],
+              [0.62, 0.42],
+              [1, 0.46],
+            ],
+          },
+          {
+            actor: 1,
+            lane: 0,
+            x: [
+              [0, 0.32],
+              [0.3, 0.3],
+              [0.62, 0.2],
+              [1, 0.08],
+            ],
+          },
         ],
         world: steady,
       };
     case 'defend':
       return {
         cars: [
-          { actor: 0, lane: 0, x: [[0, 0.36], [1, 0.42]] },
-          { actor: 1, lane: 1, x: [[0, -0.05], [0.35, 0.24], [0.55, 0.27], [0.82, 0.04], [1, 0.0]] },
+          {
+            actor: 0,
+            lane: 0,
+            x: [
+              [0, 0.36],
+              [1, 0.42],
+            ],
+          },
+          {
+            actor: 1,
+            lane: 1,
+            x: [
+              [0, -0.05],
+              [0.35, 0.24],
+              [0.55, 0.27],
+              [0.82, 0.04],
+              [1, 0.0],
+            ],
+          },
         ],
         world: steady,
-        emit: (car) => [
-          { t0: 0.5, t1: 0.66, ...front(car(1, 0.55)), count: 10, kind: 'smoke', drift: -600, seed: 3 },
-        ],
+        emit: (car) => [{ t0: 0.5, t1: 0.66, ...front(car(1, 0.55)), count: 10, kind: 'smoke', drift: -600, seed: 3 }],
       };
     case 'failedPass':
       return {
         cars: [
-          { actor: 0, lane: 1, x: [[0, -0.05], [0.4, 0.3], [0.6, 0.18], [1, 0.02]] },
-          { actor: 1, lane: 0, x: [[0, 0.36], [1, 0.4]] },
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, -0.05],
+              [0.4, 0.3],
+              [0.6, 0.18],
+              [1, 0.02],
+            ],
+          },
+          {
+            actor: 1,
+            lane: 0,
+            x: [
+              [0, 0.36],
+              [1, 0.4],
+            ],
+          },
         ],
         world: steady,
         emit: (car) => [{ t0: 0.38, t1: 0.58, ...front(car(0, 0.45)), count: 14, kind: 'smoke', drift: -600, seed: 4 }],
       };
     case 'finishWin':
       return {
-        cars: [{ actor: 0, lane: 1, x: [[0, -0.7], [0.5, 0.24], [0.75, 0.38], [1, 0.42]] }],
-        world: [[0, 0], [0.5, 1.2], [1, 1.45]],
+        cars: [
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, -0.7],
+              [0.5, 0.24],
+              [0.75, 0.38],
+              [1, 0.42],
+            ],
+          },
+        ],
+        world: [
+          [0, 0],
+          [0.5, 1.2],
+          [1, 1.45],
+        ],
         finish: 0.5,
         flag: 'chequered',
         emit: () => [
@@ -79,18 +143,51 @@ export function sideScenario(kind: string): Scenario {
     case 'photoFinish':
       return {
         cars: [
-          { actor: 0, lane: 1, x: [[0, -0.7], [0.5, 0.26], [1, 0.34]] },
-          { actor: 1, lane: 0, x: [[0, -0.66], [0.5, 0.22], [1, 0.28]] },
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, -0.7],
+              [0.5, 0.26],
+              [1, 0.34],
+            ],
+          },
+          {
+            actor: 1,
+            lane: 0,
+            x: [
+              [0, -0.66],
+              [0.5, 0.22],
+              [1, 0.28],
+            ],
+          },
         ],
-        world: [[0, 0], [0.5, 1.2], [1, 1.3]],
+        world: [
+          [0, 0],
+          [0.5, 1.2],
+          [1, 1.3],
+        ],
         finish: 0.5,
         flag: 'chequered',
         flash: 0.5,
       };
     case 'engineFailure':
       return {
-        cars: [{ actor: 0, lane: 1, x: [[0, 0.25], [1, -0.05]] }],
-        world: [[0, 0], [0.5, 1.1], [1, 1.5]],
+        cars: [
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, 0.25],
+              [1, -0.05],
+            ],
+          },
+        ],
+        world: [
+          [0, 0],
+          [0.5, 1.1],
+          [1, 1.5],
+        ],
         emit: (car) => [
           { t0: 0.15, t1: 0.95, x: 0, y: 0, count: 34, kind: 'smoke', origin: (t: number) => rear(car(0, t)), drift: -240, seed: 7 },
           { t0: 0.3, t1: 0.7, x: 0, y: 0, count: 14, kind: 'flame', origin: (t: number) => rear(car(0, t)), seed: 8 },
@@ -99,8 +196,22 @@ export function sideScenario(kind: string): Scenario {
     case 'rainStart':
       return {
         cars: [
-          { actor: 0, lane: 1, x: [[0, 0.1], [1, 0.22]] },
-          { actor: 1, lane: 0, x: [[0, 0.4], [1, 0.34]] },
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, 0.1],
+              [1, 0.22],
+            ],
+          },
+          {
+            actor: 1,
+            lane: 0,
+            x: [
+              [0, 0.4],
+              [1, 0.34],
+            ],
+          },
         ],
         world: steady,
         emit: (car) => [
@@ -111,14 +222,44 @@ export function sideScenario(kind: string): Scenario {
     case 'safetyCar':
       return {
         cars: [
-          { actor: 99, lane: 0, x: [[0, 0.44], [1, 0.47]], sc: true },
-          { actor: 0, lane: 1, x: [[0, 0.02], [1, 0.06]] },
+          {
+            actor: 99,
+            lane: 0,
+            x: [
+              [0, 0.44],
+              [1, 0.47],
+            ],
+            sc: true,
+          },
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, 0.02],
+              [1, 0.06],
+            ],
+          },
         ],
-        world: [[0, 0], [1, 1.2]],
+        world: [
+          [0, 0],
+          [1, 1.2],
+        ],
         flag: 'yellow',
       };
     default:
-      return { cars: [{ actor: 0, lane: 1, x: [[0, 0.1], [1, 0.4]] }], world: steady };
+      return {
+        cars: [
+          {
+            actor: 0,
+            lane: 1,
+            x: [
+              [0, 0.1],
+              [1, 0.4],
+            ],
+          },
+        ],
+        world: steady,
+      };
   }
 }
 
@@ -129,7 +270,23 @@ function front(c: { x: number; y: number; w: number; h: number }): { x: number; 
   return { x: c.x + c.w * 0.8, y: c.y + c.h * 0.85 };
 }
 
-function Scroller({ prog, keys, factor, W, children, top, height }: { prog: SharedValue<number>; keys: number[][]; factor: number; W: number; children: React.ReactNode; top: number; height: number }) {
+function Scroller({
+  prog,
+  keys,
+  factor,
+  W,
+  children,
+  top,
+  height,
+}: {
+  prog: SharedValue<number>;
+  keys: number[][];
+  factor: number;
+  W: number;
+  children: React.ReactNode;
+  top: number;
+  height: number;
+}) {
   const style = useAnimatedStyle(() => {
     const off = kf(prog.value, keys) * factor * W;
     return { transform: [{ translateX: -(off % W) }] };
@@ -242,7 +399,7 @@ export function SideScene({ spec, prog, W, H }: { spec: HighlightSpec; prog: Sha
       {sc.flag ? <WavingFlag prog={prog} kind={sc.flag} x={W * 0.78} y={H * 0.36} /> : null}
       <SpeedLines prog={prog} W={W} H={H * 0.3} y0={H * 0.62} intensity={sc.finish !== undefined ? 0.6 : 1} />
       {sorted.map(({ c, i }) => {
-        const actor = c.sc ? undefined : spec.actors[c.actor] ?? spec.actors[0];
+        const actor = c.sc ? undefined : (spec.actors[c.actor] ?? spec.actors[0]);
         const w = carW[c.lane];
         const h = w * (64 / 220);
         return (

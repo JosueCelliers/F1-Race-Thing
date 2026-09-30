@@ -11,22 +11,15 @@ const RISK = [
   { color: C.red, label: 'High risk' },
 ];
 
-export function MomentSheet({
-  moment,
-  resolution,
-  onChoose,
-  onContinue,
-}: {
-  moment: Moment;
-  resolution: MomentResolution | null;
-  onChoose: (id: string) => void;
-  onContinue: () => void;
-}) {
+export function MomentSheet({ moment, resolution, onChoose, onContinue }: { moment: Moment; resolution: MomentResolution | null; onChoose: (id: string) => void; onContinue: () => void }) {
   const [picked, setPicked] = useState<string | null>(null);
   return (
     <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'flex-end' }}>
       <Animated.View entering={FadeIn.duration(200)} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(2,4,10,0.55)' }} />
-      <Animated.View entering={SlideInDown.springify().damping(18)} style={{ backgroundColor: C.surface, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: S.lg, paddingBottom: 34, borderTopWidth: 1, borderColor: C.lineStrong }}>
+      <Animated.View
+        entering={SlideInDown.springify().damping(18)}
+        style={{ backgroundColor: C.surface, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: S.lg, paddingBottom: 34, borderTopWidth: 1, borderColor: C.lineStrong }}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ backgroundColor: C.red, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2, transform: [{ skewX: '-10deg' }] }}>
             <Txt v="label" color="#FFFFFF" style={{ fontSize: 10.5 }}>
@@ -52,7 +45,20 @@ export function MomentSheet({
                   onChoose(o.id);
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: picked === o.id ? C.surface3 : C.surface2, borderRadius: R.md, paddingVertical: 12, paddingHorizontal: 14, borderWidth: 1, borderColor: C.lineStrong, overflow: 'hidden' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    backgroundColor: picked === o.id ? C.surface3 : C.surface2,
+                    borderRadius: R.md,
+                    paddingVertical: 12,
+                    paddingHorizontal: 14,
+                    borderWidth: 1,
+                    borderColor: C.lineStrong,
+                    overflow: 'hidden',
+                  }}
+                >
                   <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: RISK[o.risk].color }} />
                   <Txt v="h1">{o.emoji}</Txt>
                   <View style={{ flex: 1 }}>

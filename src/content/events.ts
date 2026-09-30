@@ -40,7 +40,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     weight: 2,
     when: { needsTeammate: true, minRound: 3 },
     options: [
-      { label: 'Agree to play ball', emoji: '🤝', hint: 'The team will remember', effects: { teamRelation: 10, teammateRelation: 6, morale: -8 }, text: 'The boss nods. You feel like a very well-paid doorstop.' },
+      {
+        label: 'Agree to play ball',
+        emoji: '🤝',
+        hint: 'The team will remember',
+        effects: { teamRelation: 10, teammateRelation: 6, morale: -8 },
+        text: 'The boss nods. You feel like a very well-paid doorstop.',
+      },
       { label: 'Refuse outright', emoji: '🙅', hint: 'Principles cost extra', effects: { teamRelation: -10, morale: 8, fans: 25 }, text: 'Word leaks. The fans love a rebel. The boss does not.' },
       {
         label: 'Nod, then ignore it',
@@ -89,7 +95,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
           { weight: 1, text: 'You win too hard. A board is flipped. The friendship is on pause.', effects: { teammateRelation: -8, morale: 3 } },
         ],
       },
-      { label: 'Go, but gather intel', emoji: '🕵️', hint: 'Know thy enemy', effects: { teammateRelation: 5, form: 2, morale: -3 }, text: 'Between rounds you casually learn their braking points. You feel slightly guilty.' },
+      {
+        label: 'Go, but gather intel',
+        emoji: '🕵️',
+        hint: 'Know thy enemy',
+        effects: { teammateRelation: 5, form: 2, morale: -3 },
+        text: 'Between rounds you casually learn their braking points. You feel slightly guilty.',
+      },
       { label: 'Politely decline', emoji: '🙂', effects: { teammateRelation: -5, form: 1 }, text: 'You spend the night on data instead. Lonely, but fast.' },
     ],
   },
@@ -161,7 +173,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
           { weight: 1, text: 'They smell a rat and tell the boss you tried to sabotage them.', effects: { teammateRelation: -15, teamRelation: -8 } },
         ],
       },
-      { label: 'Share it openly', emoji: '🤲', hint: 'A rising tide lifts all cars', effects: { teammateRelation: 12, teamRelation: 5, form: -1 }, text: 'The team loves the attitude. Your advantage, less so.' },
+      {
+        label: 'Share it openly',
+        emoji: '🤲',
+        hint: 'A rising tide lifts all cars',
+        effects: { teammateRelation: 12, teamRelation: 5, form: -1 },
+        text: 'The team loves the attitude. Your advantage, less so.',
+      },
     ],
   },
   {
@@ -180,7 +198,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
           { weight: 1, text: '“Let’s see how the season goes.” That is not a yes.', effects: { morale: -8 } },
         ],
       },
-      { label: 'Outwork them', emoji: '💪', hint: 'Sim sessions at 2am', effects: { form: 2, morale: -5, teammateRelation: -5 }, text: 'You basically live at the factory. The cleaners know your coffee order.' },
+      {
+        label: 'Outwork them',
+        emoji: '💪',
+        hint: 'Sim sessions at 2am',
+        effects: { form: 2, morale: -5, teammateRelation: -5 },
+        text: 'You basically live at the factory. The cleaners know your coffee order.',
+      },
       { label: 'Form an alliance', emoji: '🤝', effects: { teammateRelation: 12, teamRelation: -4 }, text: 'You agree to lobby for both seats. Management smells a union forming.' },
     ],
   },
@@ -196,7 +220,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     weight: 3,
     when: { needsRival: true },
     options: [
-      { label: 'Fire back', emoji: '🔥', hint: 'Clapbacks trend', effects: { rivalHeat: 12, fans: 40, morale: 4 }, text: 'You say they “overtake like a shopping trolley”. The internet is delighted.' },
+      {
+        label: 'Fire back',
+        emoji: '🔥',
+        hint: 'Clapbacks trend',
+        effects: { rivalHeat: 12, fans: 40, morale: 4 },
+        text: 'You say they “overtake like a shopping trolley”. The internet is delighted.',
+      },
       { label: 'Stay silent', emoji: '🧘', effects: { morale: -4, reputation: 2 }, text: 'You let the stopwatch do the talking. The grown-ups nod approvingly.' },
       {
         label: 'Send them cookies',
@@ -363,7 +393,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     weight: 1,
     when: { minRound: 2, once: true },
     options: [
-      { label: 'Full access', emoji: '🎥', hint: 'Fame, with side effects', effects: { fans: 200, money: 150, morale: -8, teamRelation: -4 }, text: 'Your life is now “content”. Your mum has hired an agent.' },
+      {
+        label: 'Full access',
+        emoji: '🎥',
+        hint: 'Fame, with side effects',
+        effects: { fans: 200, money: 150, morale: -8, teamRelation: -4 },
+        text: 'Your life is now “content”. Your mum has hired an agent.',
+      },
       { label: 'Limited access', emoji: '🚪', effects: { fans: 80, money: 60, morale: -3 }, text: 'One tidy episode, a few awkward retakes, and your bedroom stays off camera.' },
       { label: 'No thanks', emoji: '🙅', effects: { morale: 6 }, text: 'You stay a mystery. Your weekends remain blissfully unfilmed.' },
     ],
@@ -722,7 +758,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     text: 'You are invited into a pro sim-racing league against teenagers who have never sat in a real car. They are terrifyingly fast.',
     weight: 2,
     options: [
-      { label: 'Take it seriously', emoji: '🎯', hint: 'Humbling, but useful', effects: { skills: { racecraft: 1 }, morale: -5 }, text: 'You get lapped by a 14-year-old called LapGoblin. You learn a lot.' },
+      {
+        label: 'Take it seriously',
+        emoji: '🎯',
+        hint: 'Humbling, but useful',
+        effects: { skills: { racecraft: 1 }, morale: -5 },
+        text: 'You get lapped by a 14-year-old called LapGoblin. You learn a lot.',
+      },
       { label: 'Stream it for fun', emoji: '🎮', effects: { fans: 50, morale: 4, teamRelation: -3 }, text: 'You crash constantly and the chat loves it. The team asks you to maybe stop.' },
       { label: 'Stick to reality', emoji: '🌍', effects: { form: 1 }, text: 'You spend the evening on real onboard footage instead. Sensible. Dull.' },
     ],
@@ -753,7 +795,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     text: 'A performance psychologist wants to work with you. Their first exercise: describe your feelings about the first corner using only colours.',
     weight: 2,
     options: [
-      { label: 'Commit to it', emoji: '🎨', hint: 'Slow burn, long game', effects: { growth: 1, morale: 5, money: -60 }, text: 'The first corner is “angry orange”. Weirdly, you already feel calmer.' },
+      {
+        label: 'Commit to it',
+        emoji: '🎨',
+        hint: 'Slow burn, long game',
+        effects: { growth: 1, morale: 5, money: -60 },
+        text: 'The first corner is “angry orange”. Weirdly, you already feel calmer.',
+      },
       {
         label: 'Try one session',
         emoji: '🙂',
@@ -791,7 +839,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     text: 'Your trainer suggests two weeks at a mountain training camp. No wifi, no takeaways, and a goat that seems to be following you.',
     weight: 1,
     options: [
-      { label: 'Head for the mountain', emoji: '🐐', hint: 'Suffer now, fly later', effects: { skills: { pace: 1 }, morale: -6, money: -50 }, text: 'You come back fitter, faster and with a goat-shaped hole in your heart.' },
+      {
+        label: 'Head for the mountain',
+        emoji: '🐐',
+        hint: 'Suffer now, fly later',
+        effects: { skills: { pace: 1 }, morale: -6, money: -50 },
+        text: 'You come back fitter, faster and with a goat-shaped hole in your heart.',
+      },
       { label: 'Train at home', emoji: '🏠', effects: { form: 1, morale: 3 }, text: 'You jog round the block and call it “urban altitude”.' },
     ],
   },
@@ -867,7 +921,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
         ],
       },
       { label: 'Stay home', emoji: '🏠', effects: { morale: -3, form: 1 }, text: 'You watch the party on social media while eating cereal. Discipline!' },
-      { label: 'Bring the mechanics', emoji: '🔧', hint: 'Plus-twelve?', effects: { teamRelation: 10, fans: 40, money: -40 }, text: 'The pop star meets your pit crew. Karaoke happens. Bonds are formed.' },
+      {
+        label: 'Bring the mechanics',
+        emoji: '🔧',
+        hint: 'Plus-twelve?',
+        effects: { teamRelation: 10, fans: 40, money: -40 },
+        text: 'The pop star meets your pit crew. Karaoke happens. Bonds are formed.',
+      },
     ],
   },
   {
@@ -1001,7 +1061,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     weight: 3,
     when: { after: ['dnf', 'crash'] },
     options: [
-      { label: 'Watch the replay', emoji: '📺', hint: 'Painful, but educational', effects: { morale: -6, skills: { consistency: 1 } }, text: 'You watch it forty times. It hurts. But now you see exactly what went wrong.' },
+      {
+        label: 'Watch the replay',
+        emoji: '📺',
+        hint: 'Painful, but educational',
+        effects: { morale: -6, skills: { consistency: 1 } },
+        text: 'You watch it forty times. It hurts. But now you see exactly what went wrong.',
+      },
       { label: 'Go for a long run', emoji: '🏃', effects: { morale: 6, form: 1 }, text: 'Ten kilometres of angry jogging. By the end, you feel human again.' },
       {
         label: 'Vent to the mechanics',
@@ -1123,7 +1189,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
           { weight: 1, text: 'You get defensive and say “we only paid a bit”. Oops.', effects: { reputation: -4, fans: 30 } },
         ],
       },
-      { label: 'Fund a scholarship', emoji: '🎓', hint: 'Money where your mouth is', effects: { money: -250, reputation: 5, fans: 40 }, text: 'You fund karting for kids without the cash. The critics go very quiet.' },
+      {
+        label: 'Fund a scholarship',
+        emoji: '🎓',
+        hint: 'Money where your mouth is',
+        effects: { money: -250, reputation: 5, fans: 40 },
+        text: 'You fund karting for kids without the cash. The critics go very quiet.',
+      },
     ],
   },
   {
@@ -1307,7 +1379,12 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     weight: 3,
     when: { personality: ['grafter'] },
     options: [
-      { label: 'Roll up your sleeves', emoji: '🔧', effects: { teamRelation: 10, morale: -4, skills: { pace: 1 } }, text: 'Scraped knuckles, rebuilt gearbox. You understand the car better than ever.' },
+      {
+        label: 'Roll up your sleeves',
+        emoji: '🔧',
+        effects: { teamRelation: 10, morale: -4, skills: { pace: 1 } },
+        text: 'Scraped knuckles, rebuilt gearbox. You understand the car better than ever.',
+      },
       { label: 'Go home for once', emoji: '🛋️', effects: { morale: 8, teamRelation: -3 }, text: 'You rediscover your sofa. It missed you.' },
       {
         label: 'Pull an all-nighter',
@@ -1505,7 +1582,13 @@ export const LIFE_EVENTS: LifeEventDef[] = [
     weight: 3,
     when: { discipline: ['endurance'] },
     options: [
-      { label: 'Practise on the sim', emoji: '🖥️', hint: 'Hours of dark laps', effects: { skills: { consistency: 1 }, morale: -4 }, text: 'Hours of dark sim laps. You can now see in the dark. Sort of.' },
+      {
+        label: 'Practise on the sim',
+        emoji: '🖥️',
+        hint: 'Hours of dark laps',
+        effects: { skills: { consistency: 1 }, morale: -4 },
+        text: 'Hours of dark sim laps. You can now see in the dark. Sort of.',
+      },
       { label: 'Ask for a day stint', emoji: '☀️', effects: { teamRelation: -8, morale: 5 }, text: 'The team shuffles the rota. Your co-driver gets the ghosts instead.' },
       {
         label: 'Embrace the dark',

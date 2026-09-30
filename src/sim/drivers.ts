@@ -1,17 +1,6 @@
 import { NAME_GROUPS } from '../content/names';
 import { nation, NATIONS } from '../content/nations';
-import {
-  BROW_PARTS,
-  EXTRA_PARTS,
-  EYE_PARTS,
-  FACE_PARTS,
-  FACIAL_PARTS,
-  HAIR_PARTS,
-  HELMET_COLORS,
-  HELMET_PATTERNS,
-  MOUTH_PARTS,
-  NOSE_PARTS,
-} from '../content/looks';
+import { BROW_PARTS, EXTRA_PARTS, EYE_PARTS, FACE_PARTS, FACIAL_PARTS, HAIR_PARTS, HELMET_COLORS, HELMET_PATTERNS, MOUTH_PARTS, NOSE_PARTS } from '../content/looks';
 import { PERSONALITIES, personality } from '../content/traits';
 import type { LookPartMeta } from '../content/types';
 import { clamp, Rng } from './rng';
@@ -45,7 +34,10 @@ function stripAccents(s: string): string {
 
 /** Three-letter timing-tower code from the surname. */
 export function driverCode(d: { last: string }): string {
-  const parts = stripAccents(d.last).replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean);
+  const parts = stripAccents(d.last)
+    .replace(/[^A-Za-z ]/g, '')
+    .split(' ')
+    .filter(Boolean);
   const main = parts.length > 1 && parts[0].length <= 3 ? parts.slice(1).join('') : parts.join('');
   return (main + 'XXX').slice(0, 3).toUpperCase();
 }

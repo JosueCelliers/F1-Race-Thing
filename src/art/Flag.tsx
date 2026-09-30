@@ -18,11 +18,7 @@ function stripes(spec: Extract<FlagSpec, { kind: 'h' | 'v' }>) {
     const start = acc / total;
     acc += ratios[i];
     const size = ratios[i] / total;
-    return spec.kind === 'h' ? (
-      <Rect key={i} x={0} y={start * H} width={W} height={size * H + 0.5} fill={c} />
-    ) : (
-      <Rect key={i} x={start * W} y={0} width={size * W + 0.5} height={H} fill={c} />
-    );
+    return spec.kind === 'h' ? <Rect key={i} x={0} y={start * H} width={W} height={size * H + 0.5} fill={c} /> : <Rect key={i} x={start * W} y={0} width={size * W + 0.5} height={H} fill={c} />;
   });
 }
 
@@ -118,8 +114,7 @@ function custom(id: string) {
       const rows = [];
       for (let i = 0; i < 13; i++) rows.push(<Rect key={i} x={0} y={(i * H) / 13} width={W} height={H / 13 + 0.2} fill={i % 2 === 0 ? '#B31942' : '#FFFFFF'} />);
       const stars = [];
-      for (let r = 0; r < 5; r++)
-        for (let c = 0; c < 6; c++) stars.push(<Circle key={`${r}-${c}`} cx={2.6 + c * 3.9 + (r % 2) * 1.9} cy={2.4 + r * 3.9} r={0.85} fill="#FFFFFF" />);
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 6; c++) stars.push(<Circle key={`${r}-${c}`} cx={2.6 + c * 3.9 + (r % 2) * 1.9} cy={2.4 + r * 3.9} r={0.85} fill="#FFFFFF" />);
       return (
         <>
           {rows}

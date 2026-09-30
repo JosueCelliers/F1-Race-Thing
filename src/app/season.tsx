@@ -111,7 +111,13 @@ export default function SeasonReview() {
           <Card>
             <View style={{ gap: 12 }}>
               {(['pace', 'racecraft', 'consistency', 'wet'] as const).map((k) => (
-                <StatBar key={k} label={k} value={dev.after[k]} delta={Math.round(dev.after[k] - dev.before[k])} color={k === 'pace' ? C.red : k === 'racecraft' ? C.orange : k === 'consistency' ? C.cyan : C.blue} />
+                <StatBar
+                  key={k}
+                  label={k}
+                  value={dev.after[k]}
+                  delta={Math.round(dev.after[k] - dev.before[k])}
+                  color={k === 'pace' ? C.red : k === 'racecraft' ? C.orange : k === 'consistency' ? C.cyan : C.blue}
+                />
               ))}
             </View>
             <Txt v="small" color={C.textMute} style={{ marginTop: 10 }}>
@@ -124,7 +130,10 @@ export default function SeasonReview() {
       <SectionTitle title="Champions around the world" />
       <Card padded={false} style={{ padding: 8 }}>
         {review.champions.map((c) => (
-          <View key={c.series} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, backgroundColor: c.driverId === me.id ? withAlpha(C.gold, 0.15) : 'transparent' }}>
+          <View
+            key={c.series}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, backgroundColor: c.driverId === me.id ? withAlpha(C.gold, 0.15) : 'transparent' }}
+          >
             <View style={{ width: 4, height: 28, borderRadius: 2, backgroundColor: seriesDef(c.series).color }} />
             <View style={{ flex: 1 }}>
               <Txt v="label" color={seriesDef(c.series).color}>

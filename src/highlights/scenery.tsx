@@ -29,8 +29,13 @@ export function FarLayer({ env, W, H, night, seed }: { env: EnvironmentDef; W: n
   switch (env.far) {
     case 'mountains': {
       const peaks = Array.from({ length: 6 }, (_, i) => ({ x: (i + 0.5) * (W / 6) + (r() - 0.5) * 20, h: H * (0.45 + r() * 0.45) }));
-      const d = `M0 ${base} L0 ${base - H * 0.3} ` + peaks.map((p) => `L${p.x - 30} ${base - p.h * 0.55} L${p.x} ${base - p.h} L${p.x + 34} ${base - p.h * 0.6}`).join(' ') + ` L${W} ${base - H * 0.3} L${W} ${base}Z`;
-      const snow = peaks.map((p, i) => <Path key={i} d={`M${p.x - 12} ${base - p.h * 0.83} L${p.x} ${base - p.h} L${p.x + 13} ${base - p.h * 0.84} L${p.x + 4} ${base - p.h * 0.8} Z`} fill="#FFFFFF" opacity={night ? 0.25 : 0.85} />);
+      const d =
+        `M0 ${base} L0 ${base - H * 0.3} ` +
+        peaks.map((p) => `L${p.x - 30} ${base - p.h * 0.55} L${p.x} ${base - p.h} L${p.x + 34} ${base - p.h * 0.6}`).join(' ') +
+        ` L${W} ${base - H * 0.3} L${W} ${base}Z`;
+      const snow = peaks.map((p, i) => (
+        <Path key={i} d={`M${p.x - 12} ${base - p.h * 0.83} L${p.x} ${base - p.h} L${p.x + 13} ${base - p.h * 0.84} L${p.x + 4} ${base - p.h * 0.8} Z`} fill="#FFFFFF" opacity={night ? 0.25 : 0.85} />
+      ));
       shape = () => (
         <>
           <Path d={d} fill={col} />
@@ -153,7 +158,15 @@ export function MidLayer({ env, W, H, night, seed }: { env: EnvironmentDef; W: n
             <Rect x={x + 6} y={H - H * 0.34} width={3} height={H * 0.34} fill="#2A2F3A" />
             <Rect x={x + w - 6} y={H - H * 0.34} width={3} height={H * 0.34} fill="#2A2F3A" />
             <Rect x={x} y={H - H * 0.5} width={w} height={H * 0.2} rx={2} fill={bg} />
-            <SvgText x={x + w / 2} y={H - H * 0.36} fontSize={H * 0.11} fontFamily="BarlowCondensed-Black-Italic" fontWeight="900" fill={bg === shade('#FFC940', -dark) ? '#111' : '#FFFFFF'} textAnchor="middle">
+            <SvgText
+              x={x + w / 2}
+              y={H - H * 0.36}
+              fontSize={H * 0.11}
+              fontFamily="BarlowCondensed-Black-Italic"
+              fontWeight="900"
+              fill={bg === shade('#FFC940', -dark) ? '#111' : '#FFFFFF'}
+              textAnchor="middle"
+            >
               {text}
             </SvgText>
           </G>,
@@ -187,7 +200,16 @@ export function MidLayer({ env, W, H, night, seed }: { env: EnvironmentDef; W: n
             <Path d={`M${x + 20} ${H} Q${x + 14} ${H - H * 0.4} ${x + 28} ${H - H * 0.7}`} stroke={shade('#7A5A3A', -dark)} strokeWidth={5} fill="none" />
             {[-50, -20, 10, 40, 160, 200].map((a, j) => {
               const rad = (a * Math.PI) / 180;
-              return <Path key={j} d={`M${x + 28} ${H - H * 0.7} q${Math.cos(rad) * 20} ${Math.sin(rad) * 20 - 10} ${Math.cos(rad) * 34} ${Math.sin(rad) * 34 + 8}`} stroke={shade('#2F8A4A', -dark)} strokeWidth={4} fill="none" strokeLinecap="round" />;
+              return (
+                <Path
+                  key={j}
+                  d={`M${x + 28} ${H - H * 0.7} q${Math.cos(rad) * 20} ${Math.sin(rad) * 20 - 10} ${Math.cos(rad) * 34} ${Math.sin(rad) * 34 + 8}`}
+                  stroke={shade('#2F8A4A', -dark)}
+                  strokeWidth={4}
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              );
             })}
           </G>,
         );
@@ -200,7 +222,9 @@ export function MidLayer({ env, W, H, night, seed }: { env: EnvironmentDef; W: n
           <G key={k}>
             <Rect x={x} y={H - h} width={w} height={h} fill={c} />
             {Array.from({ length: 3 }, (_, row) =>
-              Array.from({ length: 3 }, (_, col) => <Rect key={`${row}${col}`} x={x + 6 + col * (w / 3.2)} y={H - h + 8 + row * 16} width={w / 5} height={9} fill={night ? '#FFD66B' : '#5B7FA6'} opacity={night ? 0.8 : 0.7} />),
+              Array.from({ length: 3 }, (_, col) => (
+                <Rect key={`${row}${col}`} x={x + 6 + col * (w / 3.2)} y={H - h + 8 + row * 16} width={w / 5} height={9} fill={night ? '#FFD66B' : '#5B7FA6'} opacity={night ? 0.8 : 0.7} />
+              )),
             )}
           </G>,
         );
@@ -255,7 +279,17 @@ export function BarrierLayer({ env, W, H, night }: { env: EnvironmentDef; W: num
       content = (
         <>
           {Array.from({ length: Math.ceil(W / 14) }, (_, i) =>
-            [0, 1].map((row) => <Circle key={`${i}-${row}`} cx={i * 14 + 7 + (row ? 7 : 0)} cy={H * 0.35 + row * H * 0.35} r={H * 0.24} fill={row ? '#191B22' : i % 4 === 0 ? shade('#E10600', d) : '#20232C'} stroke="#0A0B0F" strokeWidth={1} />),
+            [0, 1].map((row) => (
+              <Circle
+                key={`${i}-${row}`}
+                cx={i * 14 + 7 + (row ? 7 : 0)}
+                cy={H * 0.35 + row * H * 0.35}
+                r={H * 0.24}
+                fill={row ? '#191B22' : i % 4 === 0 ? shade('#E10600', d) : '#20232C'}
+                stroke="#0A0B0F"
+                strokeWidth={1}
+              />
+            )),
           )}
         </>
       );
@@ -314,9 +348,7 @@ export function TrackLayer({ W, H, env, wet, night }: { W: number; H: number; en
           {Array.from({ length: 4 }, (_, i) => (
             <Rect key={`d${i}`} x={i * (W / 4) + 10} y={H * 0.47} width={W / 10} height={2.5} fill="#FFFFFF" opacity={0.35} />
           ))}
-          {wet
-            ? Array.from({ length: 6 }, (_, i) => <Rect key={`w${i}`} x={i * (W / 6)} y={H * 0.2 + (i % 3) * H * 0.18} width={W / 9} height={1.5} fill="#BFE3FF" opacity={0.35} />)
-            : null}
+          {wet ? Array.from({ length: 6 }, (_, i) => <Rect key={`w${i}`} x={i * (W / 6)} y={H * 0.2 + (i % 3) * H * 0.18} width={W / 9} height={1.5} fill="#BFE3FF" opacity={0.35} />) : null}
         </>
       ))}
     </Svg>

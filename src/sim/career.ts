@@ -230,7 +230,9 @@ export function generateInvites(world: World): void {
     const hs = world.season.series[host.id];
     const round = hs.calendar.findIndex((r) => r.special === opt.special);
     if (round < 0) continue;
-    const teams = teamsInSeries(world, host.id).sort((x, y) => y.perf - x.perf).slice(0, 7);
+    const teams = teamsInSeries(world, host.id)
+      .sort((x, y) => y.perf - x.perf)
+      .slice(0, 7);
     const team = rng.weighted(teams, (t) => t.perf);
     const mine = world.season.series[my.id];
     const frac = round / hs.calendar.length;
@@ -465,6 +467,9 @@ export interface RaceOutcome {
   standingsPos: number;
 }
 
+/** Scenes that show the drivers' faces. */
+const CELEBRATION = new Set(['podium', 'title']);
+
 export function specFromMoment(world: World, prep: PreparedRace, h: MomentHighlight): HighlightSpec {
   const e = prep.engine;
   const step = Math.min(e.steps, h.step ?? e.step);
@@ -476,7 +481,11 @@ export function specFromMoment(world: World, prep: PreparedRace, h: MomentHighli
     env: prep.meta.track.env,
     night: !!prep.meta.track.night || (!!prep.meta.round.hours && h.kind !== 'start' && h.kind !== 'finishWin'),
     wet: e.wet >= 0.3,
-    actors: h.actors.map((i) => actorFromEntry(e.entries[i])),
+    actors: h.actors.map((i) => {
+      const actor = actorFromEntry(e.entries[i]);
+      const d = CELEBRATION.has(h.kind) ? world.drivers[e.entries[i].driverId] : undefined;
+      return d ? { ...actor, looks: d.looks, gender: d.gender, age: ageOf(d, world.year) } : actor;
+    }),
     caption: h.caption,
     sub: h.sub,
     where:
@@ -626,7 +635,9 @@ export function finishRace(world: World, prep: PreparedRace, extras: RaceExtras)
     if (hottest && !a.flags[`rivalYear_${world.year}`]) {
       a.flags[`rival_${hottest.driverId}`] = 1;
       a.flags[`rivalYear_${world.year}`] = 1;
-      const text = hottest.incidents ? `${hottest.incidents} clash${hottest.incidents > 1 ? 'es' : ''} with ${hottest.name} and counting — this is personal now.` : `${hottest.name} and ${fullName(me)} keep ending up side by side — this is getting personal.`;
+      const text = hottest.incidents
+        ? `${hottest.incidents} clash${hottest.incidents > 1 ? 'es' : ''} with ${hottest.name} and counting — this is personal now.`
+        : `${hottest.name} and ${fullName(me)} keep ending up side by side — this is getting personal.`;
       newMoments.push(addMoment(world, 'rivalry', 'A rivalry is born', text, 2));
     }
 
@@ -634,7 +645,8 @@ export function finishRace(world: World, prep: PreparedRace, extras: RaceExtras)
     const st = statsFor(me, meta.seriesId);
     const totalStarts = Object.values(me.stats).reduce((x, y) => x + y.starts, 0);
     const totalWins = Object.values(me.stats).reduce((x, y) => x + y.wins, 0);
-    if (st.starts === 1 && !meta.oneOff) newMoments.push(addMoment(world, 'debut', `${s.name} debut`, `First race in ${s.name} at ${meta.round.name}: ${pos ? `P${pos}` : 'DNF'}.`, s.tier <= 2 ? 2 : 1, { round: meta.roundIndex }));
+    if (st.starts === 1 && !meta.oneOff)
+      newMoments.push(addMoment(world, 'debut', `${s.name} debut`, `First race in ${s.name} at ${meta.round.name}: ${pos ? `P${pos}` : 'DNF'}.`, s.tier <= 2 ? 2 : 1, { round: meta.roundIndex }));
     if (pts > 0 && !a.flags.firstPoints) {
       a.flags.firstPoints = 1;
       newMoments.push(addMoment(world, 'firstPoints', 'First points', `P${pos} at ${meta.round.name}.`, 1, { round: meta.roundIndex }));
@@ -688,14 +700,14 @@ export function finishRace(world: World, prep: PreparedRace, extras: RaceExtras)
     } else if (pos > 0 && pos <= 3) {
       hl.push({ kind: 'podium', actors: [cls.order[0], cls.order[1], cls.order[2]].filter((x) => x !== undefined), caption: `P${pos} — PODIUM!`, sub: meta.round.name });
     }
-    if (pos === 0 && dnfReason === 'mech') hl.push({ kind: 'engineFailure', actors: [pIdx], caption: 'IT\'S OVER', sub: `${me.last} retires with a failure` });
+    if (pos === 0 && dnfReason === 'mech') hl.push({ kind: 'engineFailure', actors: [pIdx], caption: "IT'S OVER", sub: `${me.last} retires with a failure` });
     if (pos === 0 && (dnfReason === 'crash' || dnfReason === 'collision') && !hl.some((h) => h.kind === 'crash')) {
       hl.push({ kind: 'crash', actors: [pIdx], caption: 'CRASH!', sub: `${me.last} is out of the race` });
     }
     void pEntry;
     for (const h of hl) {
       // Being passed is only worth keeping at the big events.
-      const base = h.kind === 'overtake' && h.actors[0] !== pIdx ? 0.8 : HIGHLIGHT_IMPORTANCE[h.kind] ?? 1;
+      const base = h.kind === 'overtake' && h.actors[0] !== pIdx ? 0.8 : (HIGHLIGHT_IMPORTANCE[h.kind] ?? 1);
       const imp = base * (s.prestige / 100 + 0.3) * (meta.round.special ? 1.5 : 1);
       if (imp < 0.6) continue;
       const spec = specFromMoment(world, prep, h);
@@ -876,9 +888,7 @@ export function endSeason(world: World): SeasonReview {
 /** Former player drivers with big careers may come back as team principals. */
 function appointLegacyPrincipals(world: World): void {
   const rng = new Rng(mixSeed(world.seed, 'principals', world.year));
-  const candidates = Object.values(world.drivers).filter(
-    (d) => d.careerId && d.status === 'retired' && world.year - d.born >= 38 && world.year - d.born <= 70 && legacyScore(d) >= 110,
-  );
+  const candidates = Object.values(world.drivers).filter((d) => d.careerId && d.status === 'retired' && world.year - d.born >= 38 && world.year - d.born <= 70 && legacyScore(d) >= 110);
   for (const d of candidates) {
     if (Object.values(world.teams).some((t) => t.principal.driverId === d.id)) continue;
     if (!rng.chance(0.22)) continue;
@@ -940,7 +950,13 @@ export function acceptOffer(world: World, offer: Offer | null): void {
         kind = 'promotion';
         title = `Promoted to ${s.name}`;
       }
-      addMoment(world, kind, title, `${fullName(me)} signs a ${offer.years}-year deal with ${team.name}${offer.salary < 0 ? ` (bringing $${formatMoney(-offer.salary)} of backing)` : ''}.`, s.tier <= 1.5 || kind !== 'transfer' ? 2 : 1);
+      addMoment(
+        world,
+        kind,
+        title,
+        `${fullName(me)} signs a ${offer.years}-year deal with ${team.name}${offer.salary < 0 ? ` (bringing $${formatMoney(-offer.salary)} of backing)` : ''}.`,
+        s.tier <= 1.5 || kind !== 'transfer' ? 2 : 1,
+      );
       addNews(world, `${fullName(me)} joins ${team.name} (${s.name}) for ${world.year + 1}.`, { series: s.id });
     }
     runMarket(world, { team: offer.team, years: offer.years, role: offer.role, salary: offer.salary });

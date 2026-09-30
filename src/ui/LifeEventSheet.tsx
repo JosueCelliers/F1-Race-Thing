@@ -50,15 +50,7 @@ export function EffectChips({ effects }: { effects: Effects }) {
   );
 }
 
-export function LifeEventSheet({
-  event,
-  onChoose,
-  onClose,
-}: {
-  event: LifeEventInstance;
-  onChoose: (i: number) => EventResolution | undefined;
-  onClose: () => void;
-}) {
+export function LifeEventSheet({ event, onChoose, onClose }: { event: LifeEventInstance; onChoose: (i: number) => EventResolution | undefined; onClose: () => void }) {
   const [res, setRes] = useState<EventResolution | null>(null);
   const [spun, setSpun] = useState(false);
   const [req, setReq] = useState<SpinRequest | null>(null);

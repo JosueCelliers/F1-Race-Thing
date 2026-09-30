@@ -46,7 +46,10 @@ for (let c = 0; c < careers; c++) {
   console.log(
     `#${rec.index} ${rec.driver.first} ${rec.driver.last} (${rec.driver.nation}) ${rec.startYear}-${rec.endYear} age ${rec.retireAge} peak ${rec.peakOvr} ` +
       `| ${rec.verdict.tier.toUpperCase()} "${rec.verdict.title}" legacy ${rec.legacy} | starts ${t.starts} wins ${t.wins} pod ${t.podiums} titles ${t.titles} crashes ${t.crashes} ` +
-      `| ${Date.now() - t1}ms\n    ${path}\n    ${rec.moments.filter((m) => m.importance >= 3).map((m) => m.title).join(' · ')}`,
+      `| ${Date.now() - t1}ms\n    ${path}\n    ${rec.moments
+        .filter((m) => m.importance >= 3)
+        .map((m) => m.title)
+        .join(' · ')}`,
   );
 }
 const sizes = JSON.stringify(world).length;

@@ -6,19 +6,7 @@ import { Flag } from '../art/Flag';
 import { series as seriesDef } from '../content/series';
 import { family, personality } from '../content/traits';
 import { startCareer } from '../sim/career';
-import {
-  AGGRESSION_LEVELS,
-  buildWheel,
-  pickSlice,
-  POTENTIALS,
-  rollIdentity,
-  rollSkills,
-  WET_LABELS,
-  WHEEL_ORDER,
-  type Identity,
-  type Picks,
-  type WheelDef,
-} from '../sim/creation';
+import { AGGRESSION_LEVELS, buildWheel, pickSlice, POTENTIALS, rollIdentity, rollSkills, WET_LABELS, WHEEL_ORDER, type Identity, type Picks, type WheelDef } from '../sim/creation';
 import { generateLooks, generateName, overall } from '../sim/drivers';
 import { mixSeed, Rng } from '../sim/rng';
 import { useGame } from '../state/store';
@@ -30,7 +18,10 @@ import { C, F, R, S, withAlpha } from '../ui/theme';
 
 function PickChip({ label, flag, emoji }: { label: string; flag?: string; emoji?: string }) {
   return (
-    <Animated.View entering={ZoomIn.springify().damping(14)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface2, borderRadius: R.pill, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1, borderColor: C.line }}>
+    <Animated.View
+      entering={ZoomIn.springify().damping(14)}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface2, borderRadius: R.pill, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1, borderColor: C.line }}
+    >
       {flag ? <Flag id={flag} width={16} /> : emoji ? <Txt v="small">{emoji}</Txt> : null}
       <Txt v="small" color={C.text} style={{ fontFamily: F.bodySemi }}>
         {label}

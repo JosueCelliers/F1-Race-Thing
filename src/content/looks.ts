@@ -83,19 +83,4 @@ export const EXTRA_PARTS: LookPartMeta[] = [
 export const HELMET_PATTERNS = ['stripe', 'chevron', 'split', 'stars', 'flames', 'halo', 'checker', 'dots', 'bolt', 'crown'];
 
 /** Curated helmet palette for designs not based on nation colours. */
-export const HELMET_COLORS = [
-  '#FFFFFF',
-  '#111111',
-  '#E10600',
-  '#FFD400',
-  '#1E88E5',
-  '#00BFA5',
-  '#FF6D00',
-  '#8E24AA',
-  '#43A047',
-  '#F06292',
-  '#90A4AE',
-  '#00E5FF',
-  '#C6FF00',
-  '#D4A63A',
-];
+export const HELMET_COLORS = ['#FFFFFF', '#111111', '#E10600', '#FFD400', '#1E88E5', '#00BFA5', '#FF6D00', '#8E24AA', '#43A047', '#F06292', '#90A4AE', '#00E5FF', '#C6FF00', '#D4A63A'];

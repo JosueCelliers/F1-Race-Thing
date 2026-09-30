@@ -95,7 +95,11 @@ function PreRace({ meta, onQuali }: { meta: RaceMeta; onQuali: (c: 'push' | 'ban
             {meta.round.hours ? `${meta.round.hours} hours` : `${meta.round.laps} laps`} · {meta.track.lengthKm.toFixed(1)} km · {meta.track.kind}
           </Txt>
           <View style={{ flexDirection: 'row', gap: 6, marginTop: S.md, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Pill label={fc.wetStart ? 'Wet start' : fc.rainLater ? 'Rain threat' : 'Dry'} icon={fc.wetStart ? 'rain' : fc.rainLater ? 'cloud' : 'sun'} color={fc.wetStart || fc.rainLater ? C.blue : C.surface3} />
+            <Pill
+              label={fc.wetStart ? 'Wet start' : fc.rainLater ? 'Rain threat' : 'Dry'}
+              icon={fc.wetStart ? 'rain' : fc.rainLater ? 'cloud' : 'sun'}
+              color={fc.wetStart || fc.rainLater ? C.blue : C.surface3}
+            />
             <Pill label={`Overtaking ${meta.track.overtaking > 0.6 ? 'easy' : meta.track.overtaking > 0.35 ? 'medium' : 'hard'}`} color={C.surface3} />
             {meta.reasons.map((r) => (
               <Pill key={r} label={r} color={r.startsWith('Title') ? C.gold : r === 'Crown jewel' ? C.purple : C.surface3} />
@@ -122,7 +126,10 @@ function GridView({ prep, onStart }: { prep: PreparedRace; onStart: () => void }
   const p = e.playerIndex;
   const pos = e.cfg.grid.indexOf(p) + 1;
   return (
-    <Screen header={<Header title="Starting grid" sub={prep.meta.round.name} back={false} />} footer={<Btn label={prep.meta.track.kind === 'oval' ? 'Green flag' : 'Lights out'} icon="flag" onPress={onStart} />}>
+    <Screen
+      header={<Header title="Starting grid" sub={prep.meta.round.name} back={false} />}
+      footer={<Btn label={prep.meta.track.kind === 'oval' ? 'Green flag' : 'Lights out'} icon="flag" onPress={onStart} />}
+    >
       <Animated.View entering={ZoomIn.springify().damping(14)} style={{ alignItems: 'center', marginVertical: S.lg }}>
         {p >= 0 ? (
           <>
@@ -145,7 +152,19 @@ function GridView({ prep, onStart }: { prep: PreparedRace; onStart: () => void }
           const en = e.entries[idx];
           const me = idx === p;
           return (
-            <View key={en.driverId} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 8, marginLeft: k % 2 ? 36 : 0, borderRadius: 8, backgroundColor: me ? withAlpha(C.red, 0.2) : 'transparent' }}>
+            <View
+              key={en.driverId}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                paddingVertical: 6,
+                paddingHorizontal: 8,
+                marginLeft: k % 2 ? 36 : 0,
+                borderRadius: 8,
+                backgroundColor: me ? withAlpha(C.red, 0.2) : 'transparent',
+              }}
+            >
               <Txt v="num" style={{ width: 26 }} color={k < 3 ? C.gold : C.text}>
                 {k + 1}
               </Txt>
@@ -399,7 +418,10 @@ function Live({
   const mapH = Math.min(360, height * 0.42);
   const ahead = pos > 1 ? snap.order[pos - 2] : -1;
   const behind = pos > 0 && pos < snap.order.length ? snap.order[pos] : -1;
-  const events = eng.events.filter((ev) => ev.step <= snapIdx).slice(-3).reverse();
+  const events = eng.events
+    .filter((ev) => ev.step <= snapIdx)
+    .slice(-3)
+    .reverse();
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
@@ -419,7 +441,18 @@ function Live({
       </View>
 
       <View style={{ alignItems: 'center', marginTop: 4 }}>
-        <TrackBroadcast trackId={prep.meta.track.id} width={width} height={mapH} entries={eng.entries} prog={prog} seg={seg} playerIndex={playerIdx} rivalIndex={rival} pitted={snap.pitted} accent={s.color} />
+        <TrackBroadcast
+          trackId={prep.meta.track.id}
+          width={width}
+          height={mapH}
+          entries={eng.entries}
+          prog={prog}
+          seg={seg}
+          playerIndex={playerIdx}
+          rivalIndex={rival}
+          pitted={snap.pitted}
+          accent={s.color}
+        />
         {snap.wet >= 0.3 ? <RainOverlay width={width} height={mapH} /> : null}
       </View>
 
@@ -471,11 +504,34 @@ function Live({
         </View>
       </ScrollView>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: S.md, paddingTop: 8, paddingBottom: insets.bottom + 10, borderTopWidth: 1, borderColor: C.line, backgroundColor: withAlpha(C.bg, 0.9) }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          paddingHorizontal: S.md,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 10,
+          borderTopWidth: 1,
+          borderColor: C.line,
+          backgroundColor: withAlpha(C.bg, 0.9),
+        }}
+      >
         <IconBtn icon={paused ? 'play' : 'pause'} size={44} onPress={() => setPause(!paused)} bg={paused ? C.red : C.surface2} />
         {[1, 2, 4, 12].map((v) => (
           <Press key={v} onPress={() => changeSpeed(v)} feedback="tick">
-            <View style={{ paddingHorizontal: 10, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: speed === v ? C.surface3 : C.surface, borderWidth: 1, borderColor: speed === v ? C.lineStrong : C.line }}>
+            <View
+              style={{
+                paddingHorizontal: 10,
+                height: 36,
+                borderRadius: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: speed === v ? C.surface3 : C.surface,
+                borderWidth: 1,
+                borderColor: speed === v ? C.lineStrong : C.line,
+              }}
+            >
               <Txt v="h3" color={speed === v ? C.text : C.textMute} style={{ fontSize: 14 }}>
                 {v === 12 ? 'x12' : `x${v}`}
               </Txt>
@@ -607,7 +663,10 @@ function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOutcome }
           const out = e.cars[i].status === 'out';
           const me = en.isPlayer;
           return (
-            <View key={en.driverId} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingHorizontal: 6, borderRadius: 8, backgroundColor: me ? withAlpha(C.red, 0.18) : 'transparent' }}>
+            <View
+              key={en.driverId}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingHorizontal: 6, borderRadius: 8, backgroundColor: me ? withAlpha(C.red, 0.18) : 'transparent' }}
+            >
               <Txt v="num" style={{ width: 28 }} color={out ? C.red : k < 3 ? C.gold : C.text}>
                 {out ? 'DNF' : k + 1}
               </Txt>

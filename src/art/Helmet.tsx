@@ -68,8 +68,7 @@ function pattern(p: string, c2: string, c3: string): React.ReactNode {
       );
     case 'checker': {
       const cells = [];
-      for (let x = 0; x < 100; x += 8)
-        for (let y = 62; y < 92; y += 8) if (((x + y) / 8) % 2 === 0) cells.push(<Rect key={`${x}-${y}`} x={x} y={y} width={8} height={8} fill={c2} />);
+      for (let x = 0; x < 100; x += 8) for (let y = 62; y < 92; y += 8) if (((x + y) / 8) % 2 === 0) cells.push(<Rect key={`${x}-${y}`} x={x} y={y} width={8} height={8} fill={c2} />);
       return (
         <G>
           {cells}

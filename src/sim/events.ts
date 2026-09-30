@@ -69,7 +69,7 @@ function eligible(ev: LifeEventDef, world: World, a: ActiveCareer, tags: ResultT
   if (!w) return true;
   if (w.once && a.seenEvents[ev.id]) return false;
   const s = d.contract ? seriesDef(d.contract.series) : undefined;
-  const round = s ? world.season.series[s.id]?.round ?? 0 : 0;
+  const round = s ? (world.season.series[s.id]?.round ?? 0) : 0;
   if (w.minRound !== undefined && round < w.minRound) return false;
   if (w.after && !w.after.some((t) => tags.includes(t))) return false;
   if (w.personality && !w.personality.includes(d.personality)) return false;

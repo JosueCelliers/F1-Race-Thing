@@ -19,15 +19,7 @@ export function TeamBadge({ colors, short, size = 36 }: { colors: TeamColors; sh
       <Path d="M50 4 L94 18 L94 58 C94 84 74 100 50 108 C26 100 6 84 6 58 L6 18Z" fill={`url(#${id})`} stroke={colors.secondary} strokeWidth={5} />
       <Path d="M6 42 L94 26 L94 40 L6 56Z" fill={colors.secondary} opacity={0.9} />
       <Path d="M6 58 L94 42 L94 47 L6 63Z" fill={colors.accent} opacity={0.9} />
-      <SvgText
-        x={50}
-        y={88}
-        fontSize={27}
-        fontFamily="BarlowCondensed-Black-Italic"
-        fontWeight="900"
-        fill={readableOn(colors.primary)}
-        textAnchor="middle"
-      >
+      <SvgText x={50} y={88} fontSize={27} fontFamily="BarlowCondensed-Black-Italic" fontWeight="900" fill={readableOn(colors.primary)} textAnchor="middle">
         {short}
       </SvgText>
     </Svg>

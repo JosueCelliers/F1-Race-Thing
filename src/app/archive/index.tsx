@@ -78,7 +78,14 @@ export default function Archive() {
             const info = TIER_INFO[tier];
             return (
               <View key={tier}>
-                <SectionTitle title={`${info.emoji} ${info.label}`} right={<Txt v="label" color={C.textMute}>{list.length}</Txt>} />
+                <SectionTitle
+                  title={`${info.emoji} ${info.label}`}
+                  right={
+                    <Txt v="label" color={C.textMute}>
+                      {list.length}
+                    </Txt>
+                  }
+                />
                 <View style={{ gap: S.sm }}>
                   {list.map((c, i) => (
                     <Animated.View key={c.id} entering={FadeInDown.delay(Math.min(i, 8) * 50)}>

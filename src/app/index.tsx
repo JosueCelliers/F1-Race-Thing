@@ -28,11 +28,24 @@ function Hero() {
     <View style={{ height: w * 0.42, justifyContent: 'center', alignItems: 'center', marginTop: S.md }}>
       <Animated.View style={[{ position: 'absolute', left: 0, right: 0, top: w * 0.12, gap: 10 }, streaks]}>
         {[0.6, 0.9, 0.4, 0.75].map((o, i) => (
-          <LinearGradient key={i} colors={['transparent', withAlpha(i % 2 ? C.red : '#FFFFFF', o * 0.6)]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: 2, width: w * (0.5 + i * 0.1), marginLeft: i * 12 }} />
+          <LinearGradient
+            key={i}
+            colors={['transparent', withAlpha(i % 2 ? C.red : '#FFFFFF', o * 0.6)]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ height: 2, width: w * (0.5 + i * 0.1), marginLeft: i * 12 }}
+          />
         ))}
       </Animated.View>
       <Animated.View style={car}>
-        <CarSide carClass="formula" colors={{ primary: '#E10613', secondary: '#FFFFFF', accent: '#FFC940' }} livery="arrow" number={1} helmet={{ pattern: 'halo', colors: ['#FFFFFF', '#E10613', '#FFC940'] }} width={w * 0.95} />
+        <CarSide
+          carClass="formula"
+          colors={{ primary: '#E10613', secondary: '#FFFFFF', accent: '#FFC940' }}
+          livery="arrow"
+          number={1}
+          helmet={{ pattern: 'halo', colors: ['#FFFFFF', '#E10613', '#FFC940'] }}
+          width={w * 0.95}
+        />
       </Animated.View>
     </View>
   );
@@ -122,7 +135,13 @@ export default function Home() {
           <Btn label="Spin a new driver" icon="dice" onPress={() => router.push('/create')} sub={world?.careers.length ? 'The world has moved on. Who is next?' : 'Twelve wheels decide who you are'} />
         )}
         <View style={{ flexDirection: 'row', gap: S.md }}>
-          <Tile icon="archive" title="The Archive" sub={archiveCount ? `${archiveCount} career${archiveCount > 1 ? 's' : ''}` : 'Your past lives'} color={C.gold} onPress={() => router.push('/archive')} />
+          <Tile
+            icon="archive"
+            title="The Archive"
+            sub={archiveCount ? `${archiveCount} career${archiveCount > 1 ? 's' : ''}` : 'Your past lives'}
+            color={C.gold}
+            onPress={() => router.push('/archive')}
+          />
           <Tile icon="globe" title="The World" sub="Champions & records" color={C.cyan} onPress={() => router.push('/world')} />
         </View>
       </Animated.View>

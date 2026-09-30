@@ -188,7 +188,12 @@ export function Icon({ name, size = 22, color = '#fff', strokeWidth = 2, fill = 
       body = <Path d="M14.5 5.5a4.5 4.5 0 00-5.7 5.7L3.5 16.5 7.5 20.5l5.3-5.3a4.5 4.5 0 005.7-5.7l-2.8 2.8-2.9-.7-.7-2.9 2.4-3.2z" {...p} />;
       break;
     case 'star':
-      body = <Path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8L3.5 9.7l5.9-.8L12 3.5z" {...(fill !== 'none' ? { fill, stroke: color, strokeWidth, strokeLinejoin: 'round' as const } : p)} />;
+      body = (
+        <Path
+          d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8L3.5 9.7l5.9-.8L12 3.5z"
+          {...(fill !== 'none' ? { fill, stroke: color, strokeWidth, strokeLinejoin: 'round' as const } : p)}
+        />
+      );
       break;
     case 'fans':
       body = (

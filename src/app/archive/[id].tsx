@@ -68,7 +68,10 @@ export default function CareerDetail() {
       .sort((x, y) => x.i - y.i)
       .map((x) => x.h);
   const glory = pick(scored.map((h) => (h.tone === 'bad' ? null : h)).filter(Boolean) as HighlightItem[], 8);
-  const heartbreak = pick(scored.filter((h) => h.tone === 'bad'), 5);
+  const heartbreak = pick(
+    scored.filter((h) => h.tone === 'bad'),
+    5,
+  );
   const openHighlight = (hid: string) => {
     const h = rec.highlights.find((x) => x.id === hid);
     if (h) setReel({ specs: [h.spec], start: 0 });
@@ -78,11 +81,7 @@ export default function CareerDetail() {
     <Screen
       tint={info.color}
       header={<Header title={isFresh ? 'Career over' : `Career #${rec.index}`} sub={`${rec.startYear}–${rec.endYear}`} onBack={() => router.replace(isFresh ? '/' : '/archive')} />}
-      footer={
-        isFresh ? (
-          <Btn label="Spin your next driver" icon="dice" onPress={() => router.replace('/create')} sub={world ? `The world moves on to ${world.year + 1}` : undefined} />
-        ) : undefined
-      }
+      footer={isFresh ? <Btn label="Spin your next driver" icon="dice" onPress={() => router.replace('/create')} sub={world ? `The world moves on to ${world.year + 1}` : undefined} /> : undefined}
     >
       <Animated.View entering={ZoomIn.springify().damping(15)}>
         <View style={{ borderRadius: R.xl, overflow: 'hidden', borderWidth: 1, borderColor: withAlpha(info.color, 0.5) }}>
@@ -164,7 +163,7 @@ export default function CareerDetail() {
       <Card>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {rec.picks.map((p) => (
-            <Pill key={p.wheel} label={`${WHEEL_LABELS[p.wheel] ?? p.wheel}: ${p.wheel === 'team' ? rec.seasons[0]?.teamName ?? p.label : p.label}`} color={C.surface2} textColor={C.text} />
+            <Pill key={p.wheel} label={`${WHEEL_LABELS[p.wheel] ?? p.wheel}: ${p.wheel === 'team' ? (rec.seasons[0]?.teamName ?? p.label) : p.label}`} color={C.surface2} textColor={C.text} />
           ))}
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: S.md }}>

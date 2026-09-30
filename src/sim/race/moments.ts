@@ -239,9 +239,7 @@ export class MomentDirector {
       step: 1,
       at: 0,
       title: rolling ? 'Green flag' : 'Lights out',
-      text: rolling
-        ? `Rolling start from P${pos}. The pace car peels off...`
-        : `Starting P${pos}. Five red lights. How do you want to launch?`,
+      text: rolling ? `Rolling start from P${pos}. The pace car peels off...` : `Starting P${pos}. Five red lights. How do you want to launch?`,
       options: [
         { id: 'launch', label: 'Aggressive launch', hint: 'Gain places, risk turn-1 chaos', risk: 2, emoji: '🚀' },
         { id: 'clean', label: 'Clean getaway', hint: 'Keep it tidy through turn 1', risk: 0, emoji: '🧘' },
@@ -270,9 +268,7 @@ export class MomentDirector {
           at,
           rival,
           title: `${lapLabel} · Attack`,
-          text: oval
-            ? `You're in ${name}'s slipstream for P${pos - 1}, ${gap}s back. The run is on.`
-            : `You're ${gap}s behind ${name} for P${pos - 1}. A gap is opening into the braking zone.`,
+          text: oval ? `You're in ${name}'s slipstream for P${pos - 1}, ${gap}s back. The run is on.` : `You're ${gap}s behind ${name} for P${pos - 1}. A gap is opening into the braking zone.`,
           options: [
             { id: 'send', label: oval ? 'Pull out and go' : 'Send it', hint: 'Big chance, big crash risk', risk: 2, emoji: '🔥' },
             { id: 'pressure', label: 'Pressure them', hint: 'Force a mistake, low risk', risk: 1, emoji: '😤' },
@@ -563,7 +559,7 @@ export class MomentDirector {
       case 'drying':
         if (optionId === 'box') {
           c.pitNext = e.step * e.lapsPerStep > e.cfg.round.laps * 0.65 ? 'S' : 'M';
-          return { text: 'First onto slicks — let\'s see if it pays off.', good: null, highlight: { kind: 'pitStop', actors: [p], caption: 'SLICKS!', sub: `${me} is first to switch` } };
+          return { text: "First onto slicks — let's see if it pays off.", good: null, highlight: { kind: 'pitStop', actors: [p], caption: 'SLICKS!', sub: `${me} is first to switch` } };
         }
         return { text: 'One more lap on the inters.', good: null };
       case 'tyres':
@@ -669,9 +665,7 @@ export class MomentDirector {
     }
     const send = optionId === 'send';
     const pPass = clamp(base + (send ? 0.3 : 0.05), send ? 0.2 : 0.08, send ? 0.93 : 0.75);
-    const pColl = send
-      ? clamp(0.05 + (1 - ent.skills.consistency / 100) * 0.09 + t.danger * 0.05 + e.wet * 0.06, 0.04, 0.22)
-      : 0.015;
+    const pColl = send ? clamp(0.05 + (1 - ent.skills.consistency / 100) * 0.09 + t.danger * 0.05 + e.wet * 0.06, 0.04, 0.22) : 0.015;
     const roll = r.next();
     if (roll < pColl) {
       const res = this.collisionOutcome(p);

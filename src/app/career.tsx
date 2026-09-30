@@ -69,14 +69,7 @@ export default function CareerHub() {
   return (
     <Screen
       tint={team?.colors.primary}
-      header={
-        <Header
-          title={`${world.year} season`}
-          sub={s ? s.name : 'Without a seat'}
-          onBack={() => router.replace('/')}
-          right={<IconBtn icon="home" onPress={() => router.replace('/')} />}
-        />
-      }
+      header={<Header title={`${world.year} season`} sub={s ? s.name : 'Without a seat'} onBack={() => router.replace('/')} right={<IconBtn icon="home" onPress={() => router.replace('/')} />} />}
     >
       {/* Driver strip */}
       <Card style={{ padding: 12 }}>
@@ -179,7 +172,13 @@ export default function CareerHub() {
               <Txt v="h1" style={{ marginTop: 4 }}>
                 {a.phase === 'offers' ? 'Your future awaits' : `The ${world.year} season is over`}
               </Txt>
-              <Btn label={a.phase === 'offers' ? 'View offers' : 'Season review'} icon="trophy" kind="gold" style={{ marginTop: S.md }} onPress={() => router.push(a.phase === 'offers' ? '/offers' : '/season')} />
+              <Btn
+                label={a.phase === 'offers' ? 'View offers' : 'Season review'}
+                icon="trophy"
+                kind="gold"
+                style={{ marginTop: S.md }}
+                onPress={() => router.push(a.phase === 'offers' ? '/offers' : '/season')}
+              />
             </Card>
           ) : null}
 

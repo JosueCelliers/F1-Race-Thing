@@ -1,6 +1,7 @@
 /**
  * Art gallery used during development to review every generated asset.
  */
+import { Redirect } from 'expo-router';
 import React, { useMemo } from 'react';
 import { ScrollView, View } from 'react-native';
 import { TrackMap } from '../art/TrackMap';
@@ -42,6 +43,7 @@ export default function Dev() {
     [rng],
   );
   const classes = ['formula', 'indy', 'prototype', 'gt'];
+  if (!__DEV__) return <Redirect href="/" />;
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16 }}>
       <Section title="Portraits">

@@ -33,20 +33,7 @@ export interface WheelDef {
   slices: WheelSlice[];
 }
 
-export const WHEEL_ORDER = [
-  'nation',
-  'family',
-  'age',
-  'pace',
-  'racecraft',
-  'consistency',
-  'wet',
-  'aggression',
-  'personality',
-  'potential',
-  'series',
-  'team',
-] as const;
+export const WHEEL_ORDER = ['nation', 'family', 'age', 'pace', 'racecraft', 'consistency', 'wet', 'aggression', 'personality', 'potential', 'series', 'team'] as const;
 
 export type WheelId = (typeof WHEEL_ORDER)[number];
 

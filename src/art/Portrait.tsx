@@ -149,7 +149,14 @@ function hairFront(style: string, g: Geo, c: HairColors): React.ReactNode {
       return (
         <G>
           <Path d={cap(g, 8, 3, 3)} fill={c.base} />
-          <Path d={`M${100 - 16} ${HL + 3} Q${100 - 6} ${HL + 9} 100 ${HL + 3} Q${106} ${HL + 9} ${100 + 16} ${HL + 3}`} stroke={c.dark} strokeWidth={2.2} fill="none" strokeLinecap="round" opacity={0.6} />
+          <Path
+            d={`M${100 - 16} ${HL + 3} Q${100 - 6} ${HL + 9} 100 ${HL + 3} Q${106} ${HL + 9} ${100 + 16} ${HL + 3}`}
+            stroke={c.dark}
+            strokeWidth={2.2}
+            fill="none"
+            strokeLinecap="round"
+            opacity={0.6}
+          />
         </G>
       );
     case 'fade':
@@ -210,7 +217,11 @@ function hairFront(style: string, g: Geo, c: HairColors): React.ReactNode {
       }
       return (
         <G>
-          <Path d={`M${100 - ww - 2} ${eyeY - 6} L${pts.join(' L')} L${100 + ww + 2} ${eyeY - 6} L${100 + ww - 2} ${eyeY - 8} C${100 + ww - 3} ${HL + 6} ${100 + ww * 0.5} ${HL + 2} 100 ${HL + 3} C${100 - ww * 0.5} ${HL + 2} ${100 - ww + 3} ${HL + 6} ${100 - ww + 2} ${eyeY - 8}Z`} fill={c.base} strokeLinejoin="round" />
+          <Path
+            d={`M${100 - ww - 2} ${eyeY - 6} L${pts.join(' L')} L${100 + ww + 2} ${eyeY - 6} L${100 + ww - 2} ${eyeY - 8} C${100 + ww - 3} ${HL + 6} ${100 + ww * 0.5} ${HL + 2} 100 ${HL + 3} C${100 - ww * 0.5} ${HL + 2} ${100 - ww + 3} ${HL + 6} ${100 - ww + 2} ${eyeY - 8}Z`}
+            fill={c.base}
+            strokeLinejoin="round"
+          />
           <Path d={`M${100 - 10} ${HL} L${100 - 4} ${HL + 9} L${100 + 2} ${HL + 1} L${100 + 9} ${HL + 8}`} stroke={c.base} strokeWidth={5} strokeLinejoin="round" fill="none" />
         </G>
       );
@@ -251,7 +262,10 @@ function hairFront(style: string, g: Geo, c: HairColors): React.ReactNode {
       return (
         <G>
           <Path d={cap(g, 7, 3, 2)} fill={c.base} />
-          <Path d={`M${100 + w - 4} ${top + 8} C${100 + 10} ${HL - 4} ${100 - 16} ${HL + 4} ${100 - w + 6} ${HL + 14} L${100 - w + 2} ${HL + 2} C${100 - 20} ${top - 2} ${100 + 20} ${top - 4} ${100 + w - 4} ${top + 8}Z`} fill={shade(c.base, -0.05)} />
+          <Path
+            d={`M${100 + w - 4} ${top + 8} C${100 + 10} ${HL - 4} ${100 - 16} ${HL + 4} ${100 - w + 6} ${HL + 14} L${100 - w + 2} ${HL + 2} C${100 - 20} ${top - 2} ${100 + 20} ${top - 4} ${100 + w - 4} ${top + 8}Z`}
+            fill={shade(c.base, -0.05)}
+          />
         </G>
       );
     case 'braids':
@@ -534,7 +548,13 @@ export const Portrait = React.memo(function Portrait({ looks, gender, suit: suit
       {[-1, 1].map((side) => (
         <G key={side}>
           <Ellipse cx={100 + side * (g.w + 1)} cy={g.eyeY + 5} rx={6} ry={10} fill={skin} />
-          <Path d={`M${100 + side * (g.w + 3)} ${g.eyeY} Q${100 + side * (g.w + 5)} ${g.eyeY + 6} ${100 + side * (g.w + 2)} ${g.eyeY + 11}`} stroke={skinDark} strokeWidth={1.2} fill="none" opacity={0.5} />
+          <Path
+            d={`M${100 + side * (g.w + 3)} ${g.eyeY} Q${100 + side * (g.w + 5)} ${g.eyeY + 6} ${100 + side * (g.w + 2)} ${g.eyeY + 11}`}
+            stroke={skinDark}
+            strokeWidth={1.2}
+            fill="none"
+            opacity={0.5}
+          />
         </G>
       ))}
       <Path d={facePath(g)} fill={skin} />

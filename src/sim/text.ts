@@ -26,5 +26,5 @@ export function ordinal(n: number): string {
 }
 
 export function plural(n: number, word: string, pluralWord?: string): string {
-  return `${n} ${n === 1 ? word : pluralWord ?? word + 's'}`;
+  return `${n} ${n === 1 ? word : (pluralWord ?? word + 's')}`;
 }

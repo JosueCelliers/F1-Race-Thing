@@ -83,7 +83,10 @@ export function TeamStandingsTable({ world, seriesId, highlight }: { world: Worl
         const t = world.teams[r.teamId];
         const me = r.teamId === highlight;
         return (
-          <View key={r.teamId} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, paddingHorizontal: 10, borderRadius: 10, backgroundColor: me ? withAlpha(C.red, 0.15) : 'transparent' }}>
+          <View
+            key={r.teamId}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, paddingHorizontal: 10, borderRadius: 10, backgroundColor: me ? withAlpha(C.red, 0.15) : 'transparent' }}
+          >
             <PosBadge pos={i + 1} size={26} />
             <View style={{ width: 16, height: 16, borderRadius: 4, backgroundColor: t.colors.primary, borderWidth: 2, borderColor: t.colors.secondary }} />
             <Txt v="bodyStrong" style={{ flex: 1, fontSize: 14 }} numberOfLines={1}>

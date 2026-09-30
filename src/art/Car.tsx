@@ -184,45 +184,62 @@ function wheelsTop(front: number, rear: number, fy: number, ry: number, fw: numb
 const formulaTop: TopDef = {
   w: 110,
   h: 44,
-  body: ['M9 17 L30 16 C40 11 58 10 66 15 L72 17.5 L100 20 C103 21 103 23 100 24 L72 26.5 L66 29 C58 34 40 33 30 28 L9 27Z'],
+  // Monocoque + coke-bottle sidepods + slim nose (pointing right, centreline y=22).
+  body: [
+    'M11 18.5 L23 17.5 C27 12.5 30 9.5 37 9 L59 9 C64 9 66.5 11 67 14.5 L68.5 16.8 L76 17.8 L98.5 20.3 C100.8 20.7 100.8 23.3 98.5 23.7 L76 26.2 L68.5 27.2 L67 29.5 C66.5 33 64 35 59 35 L37 35 C30 34.5 27 31.5 23 26.5 L11 25.5Z',
+  ],
   under: (c) => (
     <G>
-      <Path d="M20 14 L28 6 M20 30 L28 38 M78 16 L84 7 M78 28 L84 37" stroke={CARBON} strokeWidth={1.4} />
-      {wheelsTop(79, 11, 11, 11, 13, 18, 8, 9)}
-      <Rect x={0} y={7} width={8} height={30} rx={1.5} fill={CARBON} />
-      <Rect x={1} y={7} width={6} height={30} rx={1} fill={c.primary} />
-      <Rect x={95} y={4} width={7} height={36} rx={1.5} fill={c.primary} />
-      <Rect x={95} y={4} width={2.5} height={36} rx={1} fill={c.secondary} />
+      {/* Floor */}
+      <Path d="M20 13 C26 7.5 32 6.5 38 6.5 L62 6.8 C68 7 70 12 70 16 L70 28 C70 32 68 37 62 37.2 L38 37.5 C32 37.5 26 36.5 20 31Z" fill={CARBON} />
+      {/* Suspension */}
+      <Path d="M26 17 L21 9 M26 27 L21 35 M31 17 L26 9 M31 27 L26 35 M73 18.5 L80 9 M73 25.5 L80 35 M77 19 L84 9 M77 25 L84 35" stroke="#1B1D22" strokeWidth={1.1} strokeLinecap="round" />
+      {wheelsTop(76, 12, 11, 11, 13, 18, 8.5, 9.5)}
+      {/* Rear wing */}
+      <Rect x={2} y={9} width={10} height={26} rx={1.6} fill={CARBON} />
+      <Rect x={3.2} y={9.8} width={7.6} height={24.4} rx={1.2} fill={c.primary} />
+      <Rect x={3.2} y={9.8} width={2.4} height={24.4} rx={1} fill={c.secondary} />
+      {/* Front wing */}
+      <Path d="M93 3 L101 5.5 C103 6 103 7 102 7.5 L96 9 L96 35 L102 36.5 C103 37 103 38 101 38.5 L93 41Z" fill={c.primary} />
+      <Path d="M96 9 L96 35" stroke={c.secondary} strokeWidth={1.6} />
+      <Rect x={92} y={2.2} width={6} height={2.2} rx={0.8} fill={CARBON} />
+      <Rect x={92} y={39.6} width={6} height={2.2} rx={0.8} fill={CARBON} />
     </G>
   ),
   over: (c, helmet) => (
     <G>
-      <Ellipse cx={60} cy={22} rx={9} ry={4.8} fill="#0E1015" />
-      <Circle cx={61} cy={22} r={3.8} fill={helmet?.colors[0] ?? '#FFFFFF'} />
-      <Circle cx={61.5} cy={22} r={1.6} fill={helmet?.colors[1] ?? c.secondary} />
-      <Path d="M52 17.5 C60 15 70 16 71 22 C70 28 60 29 52 26.5" stroke="#15161A" strokeWidth={1.6} fill="none" />
+      {/* Engine cover spine */}
+      <Path d="M14 22 L58 22" stroke={shade(c.primary, -0.35)} strokeWidth={3.4} strokeLinecap="round" strokeOpacity={0.55} />
+      {/* Sidepod inlets */}
+      <Path d="M63.5 10.5 C66 11.5 66.5 13 66.5 15 M63.5 33.5 C66 32.5 66.5 31 66.5 29" stroke="#0E1015" strokeWidth={1.4} fill="none" />
+      {/* Cockpit + helmet + halo */}
+      <Ellipse cx={64} cy={22} rx={8} ry={4.6} fill="#0E1015" />
+      <Circle cx={65} cy={22} r={3.7} fill={helmet?.colors[0] ?? '#FFFFFF'} />
+      <Path d={`M62.2 20.2 A3.7 3.7 0 0 1 68.6 21 L65 22Z`} fill={helmet?.colors[1] ?? c.secondary} />
+      <Path d="M57 17.8 C63 15.6 71 16.4 72.5 22 C71 27.6 63 28.4 57 26.2" stroke="#15161A" strokeWidth={1.7} fill="none" />
+      <Path d="M72.5 22 L76 22" stroke="#15161A" strokeWidth={1.4} />
+      {/* Mirrors */}
+      <Rect x={70} y={13.2} width={3.2} height={1.6} rx={0.6} fill={c.primary} stroke="#0E1015" strokeWidth={0.5} />
+      <Rect x={70} y={29.2} width={3.2} height={1.6} rx={0.6} fill={c.primary} stroke="#0E1015" strokeWidth={0.5} />
     </G>
   ),
-  number: { x: 84, y: 22, size: 6 },
-  livery: { x: 9, y: 10, w: 94, h: 24 },
+  livery: { x: 11, y: 9, w: 90, h: 26 },
 };
 
 const indyTop: TopDef = {
   ...formulaTop,
   under: (c) => (
     <G>
-      <Path d="M20 14 L28 6 M20 30 L28 38 M78 16 L84 7 M78 28 L84 37" stroke={CARBON} strokeWidth={1.4} />
-      {wheelsTop(79, 11, 11, 11, 13, 18, 8, 9)}
-      <Rect x={2} y={4} width={10} height={36} rx={3} fill={shade(c.primary, -0.3)} />
-      <Rect x={0} y={9} width={8} height={26} rx={1.5} fill={c.primary} />
-      <Rect x={95} y={5} width={7} height={34} rx={1.5} fill={c.primary} />
+      {formulaTop.under(c)}
+      {/* Rear wheel guards */}
+      <Path d="M30 4 C33 4 34 6 34 8 L34 10 L30 10Z M30 40 C33 40 34 38 34 36 L34 34 L30 34Z" fill={shade(c.primary, -0.25)} />
     </G>
   ),
   over: (c, helmet) => (
     <G>
-      <Ellipse cx={60} cy={22} rx={9} ry={4.8} fill="#0E1015" />
-      <Circle cx={61} cy={22} r={3.8} fill={helmet?.colors[0] ?? '#FFFFFF'} />
-      <Path d="M66 16 C73 18 73 26 66 28" stroke="#9FD4FF" strokeWidth={2.2} fill="none" strokeOpacity={0.9} />
+      {formulaTop.over?.(c, helmet)}
+      {/* Aeroscreen */}
+      <Path d="M69 15.5 C75 17 75 27 69 28.5" stroke="#9FD4FF" strokeWidth={2.4} fill="none" strokeOpacity={0.9} />
     </G>
   ),
 };
@@ -230,18 +247,36 @@ const indyTop: TopDef = {
 const protoTop: TopDef = {
   w: 110,
   h: 44,
-  body: ['M4 9 C4 5 8 4 14 4 L78 5 C94 6 104 11 107 18 L107 26 C104 33 94 38 78 39 L14 40 C8 40 4 39 4 35Z'],
-  under: () => <G>{wheelsTop(80, 20, 15, 15, 14, 15, 5, 5)}</G>,
+  // Hypercar: bulging front and rear fenders around a narrow waist.
+  body: [
+    'M6 9 C6 4.5 10 3 16 3 L31 3 C35 3 37 5 39 7.5 L65 7.5 C67 5 69 3 73 3 L90 3 C98 3 104 8 106.5 14 L107.5 22 L106.5 30 C104 36 98 41 90 41 L73 41 C69 41 67 39 65 36.5 L39 36.5 C37 39 35 41 31 41 L16 41 C10 41 6 39.5 6 35Z',
+  ],
+  under: () => (
+    <G>
+      <Path d="M8 6 L104 6 L104 38 L8 38Z" fill={CARBON} />
+    </G>
+  ),
   over: (c) => (
     <G>
-      <Path d="M52 15 C62 13 74 14 80 18 L80 26 C74 30 62 31 52 29Z" fill="#101318" />
-      <Path d="M6 21 L50 21 L50 23 L6 23Z" fill={shade(c.primary, -0.35)} />
-      <Rect x={1} y={3} width={7} height={38} rx={2} fill={CARBON} />
-      <Path d="M101 12 L106 16 M101 32 L106 28" stroke="#FFF7C2" strokeWidth={2} strokeLinecap="round" />
+      {/* Shark fin + spine */}
+      <Path d="M10 22 L52 22" stroke={shade(c.primary, -0.4)} strokeWidth={2.2} strokeLinecap="round" />
+      {/* Canopy */}
+      <Path d="M51 14.5 C60 11.5 74 12.5 80 16.5 C83 19 83 25 80 27.5 C74 31.5 60 32.5 51 29.5 C48 26 48 18 51 14.5Z" fill="#101318" />
+      <Path d="M56 15 C64 13.5 72 14.2 77 17" stroke="#9FB6D6" strokeOpacity={0.55} strokeWidth={1.2} fill="none" />
+      {/* Fender vents */}
+      <Path d="M80 6.5 L88 6.5 M80 37.5 L88 37.5 M20 6.5 L28 6.5 M20 37.5 L28 37.5" stroke="#0E1015" strokeWidth={1.6} strokeLinecap="round" />
+      {/* Rear wing with end plates */}
+      <Rect x={0.5} y={4} width={8} height={36} rx={1.6} fill={CARBON} />
+      <Rect x={1.8} y={5} width={5.4} height={34} rx={1} fill={c.primary} />
+      <Rect x={0} y={3} width={9} height={2} rx={0.8} fill={CARBON} />
+      <Rect x={0} y={39} width={9} height={2} rx={0.8} fill={CARBON} />
+      {/* Light bars */}
+      <Path d="M100 9.5 L105.5 14 M100 34.5 L105.5 30" stroke="#FFF7C2" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M8 8 L8 13 M8 31 L8 36" stroke="#FF3B5C" strokeWidth={1.6} strokeLinecap="round" />
     </G>
   ),
   number: { x: 30, y: 22, size: 9 },
-  livery: { x: 4, y: 4, w: 104, h: 36 },
+  livery: { x: 6, y: 3, w: 102, h: 38 },
 };
 
 const gtTop: TopDef = {
@@ -331,7 +366,13 @@ export const CarSide = React.memo(function CarSide({ carClass, colors, livery, n
           <Circle cx={wh.cx} cy={wh.cy} r={wh.r} fill={`url(#${uid}t)`} />
           <Circle cx={wh.cx} cy={wh.cy} r={wh.r * 0.55} fill="#2B2E37" stroke="#4A4F5C" strokeWidth={1} />
           <Circle cx={wh.cx} cy={wh.cy} r={wh.r * 0.18} fill={colors.accent} />
-          <Path d={`M${wh.cx - wh.r * 0.8} ${wh.cy - wh.r * 0.25} A${wh.r * 0.85} ${wh.r * 0.85} 0 0 1 ${wh.cx + wh.r * 0.2} ${wh.cy - wh.r * 0.82}`} stroke="#FFFFFF" strokeOpacity={0.12} strokeWidth={1.5} fill="none" />
+          <Path
+            d={`M${wh.cx - wh.r * 0.8} ${wh.cy - wh.r * 0.25} A${wh.r * 0.85} ${wh.r * 0.85} 0 0 1 ${wh.cx + wh.r * 0.2} ${wh.cy - wh.r * 0.82}`}
+            stroke="#FFFFFF"
+            strokeOpacity={0.12}
+            strokeWidth={1.5}
+            fill="none"
+          />
         </G>
       ))}
       {number !== undefined ? (

@@ -31,19 +31,7 @@ export function gapLabel(engine: RaceEngine, snap: Snapshot, i: number, interval
   return `+${g.toFixed(1)}`;
 }
 
-export function Tower({
-  engine,
-  snap,
-  prev,
-  playerIndex,
-  rows = 10,
-}: {
-  engine: RaceEngine;
-  snap: Snapshot;
-  prev?: Snapshot;
-  playerIndex: number;
-  rows?: number;
-}) {
+export function Tower({ engine, snap, prev, playerIndex, rows = 10 }: { engine: RaceEngine; snap: Snapshot; prev?: Snapshot; playerIndex: number; rows?: number }) {
   const order = snap.order;
   const pPos = order.indexOf(playerIndex);
   let list: number[];

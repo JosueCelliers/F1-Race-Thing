@@ -11,7 +11,8 @@
     "lint": "eslint src scripts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "sim": "tsx scripts/simulate-world.ts"
+    "sim": "tsx scripts/simulate-world.ts",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\""
   },
   "dependencies": {
     "expo": "~57.0.26",

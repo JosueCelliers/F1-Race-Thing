@@ -4,18 +4,7 @@
  */
 import React, { useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  runOnJS,
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { Easing, cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Defs, G, LinearGradient, Path, Polygon, RadialGradient, Stop, Text as SvgText } from 'react-native-svg';
 import { FlagShape } from '../art/Flag';
 import type { WheelSlice } from '../sim/creation';
@@ -187,16 +176,7 @@ export function SpinWheel({ slices, size = 320, request, onDone, onPressHub, fas
                     <G transform={`translate(${p.x - 64} ${p.y - 22}) scale(1.1) rotate(90 30 20)`}>
                       <FlagShape id={s.flag} />
                     </G>
-                    <SvgText
-                      x={p.x - 110}
-                      y={p.y + labelFont * 0.35}
-                      fontSize={labelFont}
-                      fontFamily={F.heading}
-                      fontWeight="700"
-                      fill={fg}
-                      opacity={dim ? 0.4 : 1}
-                      textAnchor="end"
-                    >
+                    <SvgText x={p.x - 110} y={p.y + labelFont * 0.35} fontSize={labelFont} fontFamily={F.heading} fontWeight="700" fill={fg} opacity={dim ? 0.4 : 1} textAnchor="end">
                       {text}
                     </SvgText>
                   </G>

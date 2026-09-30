@@ -30,17 +30,7 @@ export interface Skills {
 
 export type SkillKey = keyof Skills;
 
-export type PersonalityId =
-  | 'golden'
-  | 'iceCold'
-  | 'bigEgo'
-  | 'loyal'
-  | 'mercenary'
-  | 'grafter'
-  | 'showman'
-  | 'hothead'
-  | 'lateBloomer'
-  | 'partyAnimal';
+export type PersonalityId = 'golden' | 'iceCold' | 'bigEgo' | 'loyal' | 'mercenary' | 'grafter' | 'showman' | 'hothead' | 'lateBloomer' | 'partyAnimal';
 
 export type FamilyId = 'dynasty' | 'wealthy' | 'comfortable' | 'working' | 'poor';
 
@@ -416,6 +406,10 @@ export interface HighlightActor {
   livery: string;
   helmet: HelmetDesign;
   isPlayer: boolean;
+  /** Face for celebration scenes (podium, title); optional for older saves. */
+  looks?: Looks;
+  gender?: Gender;
+  age?: number;
 }
 
 export interface HighlightSpec {

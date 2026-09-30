@@ -2,7 +2,21 @@
  * Automatic play: instant race simulation (used by "Quick result" and
  * "Sim to next moment") and a full auto-career driver used by tests.
  */
-import { answerInvite, dueInvite, endSeason, finishRace, nextRaceMeta, prepareRace, simulateReserveSeason, acceptOffer, retireCareer, startCareer, stayOffer, type RaceMeta, type RaceOutcome } from './career';
+import {
+  answerInvite,
+  dueInvite,
+  endSeason,
+  finishRace,
+  nextRaceMeta,
+  prepareRace,
+  simulateReserveSeason,
+  acceptOffer,
+  retireCareer,
+  startCareer,
+  stayOffer,
+  type RaceMeta,
+  type RaceOutcome,
+} from './career';
 import { buildWheel, pickSlice, rollIdentity, WHEEL_ORDER, type Picks } from './creation';
 import { resolveLifeEvent } from './events';
 import type { MomentEffects, MomentHighlight } from './race/moments';

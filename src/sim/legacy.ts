@@ -76,11 +76,7 @@ export function verdictFor(d: Driver, totals: CareerTotals, legacy: number): Ver
   else if (legacy >= 12 || totals.seasons >= 6) tier = 'journeyman';
   else tier = 'disaster';
 
-  const cult =
-    (totals.crashes >= 12 && totals.wins <= 3) ||
-    (crashRate > 0.2 && totals.starts >= 25) ||
-    (d.fans > 900 && legacy < 110) ||
-    (totals.seasons >= 12 && totals.wins <= 1);
+  const cult = (totals.crashes >= 12 && totals.wins <= 3) || (crashRate > 0.2 && totals.starts >= 25) || (d.fans > 900 && legacy < 110) || (totals.seasons >= 12 && totals.wins <= 1);
   if (cult && (tier === 'journeyman' || tier === 'pro' || tier === 'disaster') && totals.starts >= 20) tier = 'cult';
 
   const wins = totals.wins;
@@ -106,7 +102,16 @@ export function verdictFor(d: Driver, totals: CareerTotals, legacy: number): Ver
     case 'star': {
       const endu = d.stats.endurance?.wins ?? 0;
       const amer = d.stats.american?.wins ?? 0;
-      title = (d.specials.france24 ?? 0) > 0 ? 'Endurance Icon' : (d.specials.heartland500 ?? 0) > 0 ? 'Oval Hero' : endu > (d.stats.prime?.wins ?? 0) ? 'Endurance Ace' : amer > 3 ? 'Speedway Star' : 'Race Winner';
+      title =
+        (d.specials.france24 ?? 0) > 0
+          ? 'Endurance Icon'
+          : (d.specials.heartland500 ?? 0) > 0
+            ? 'Oval Hero'
+            : endu > (d.stats.prime?.wins ?? 0)
+              ? 'Endurance Ace'
+              : amer > 3
+                ? 'Speedway Star'
+                : 'Race Winner';
       blurb = `${wins} wins and ${totals.podiums} podiums. A genuine star of ${seriesName}.`;
       break;
     }
@@ -191,12 +196,12 @@ export const RECORD_METRICS: Metric[] = [
   { id: 'poles', title: 'Most pole positions', emoji: '⏱️', get: (c) => c.totals.poles || undefined, format: (v) => `${v}` },
   { id: 'youngestPrimeChamp', title: 'Youngest Formula Prime champion', emoji: '👶', get: champAge, format: (v) => `${v} yrs`, lowest: true },
   { id: 'youngestChamp', title: 'Youngest champion (any series)', emoji: '🍼', get: anyChampAge, format: (v) => `${v} yrs`, lowest: true },
-  { id: 'dominant', title: 'Most dominant season', emoji: '💪', get: bestSeasonWinRate, format: (v) => `${Math.round(v * 100)}% wins` },
-  { id: 'longest', title: 'Longest career', emoji: '🧓', get: (c) => c.totals.seasons, format: (v) => `${v} seasons` },
+  { id: 'dominant', title: 'Most dominant season', emoji: '💪', get: (c) => bestSeasonWinRate(c) || undefined, format: (v) => `${Math.round(v * 100)}% wins` },
+  { id: 'longest', title: 'Longest career', emoji: '🧓', get: (c) => c.totals.seasons, format: (v) => `${v} season${v === 1 ? '' : 's'}` },
   { id: 'shortest', title: 'Shortest career', emoji: '⚡', get: (c) => c.totals.seasons, format: (v) => `${v} season${v === 1 ? '' : 's'}`, lowest: true },
   { id: 'crashes', title: 'Most crashes', emoji: '💥', get: (c) => c.totals.crashes || undefined, format: (v) => `${v}` },
-  { id: 'teams', title: 'Most teams driven for', emoji: '🧳', get: (c) => c.totals.teams, format: (v) => `${v}` },
-  { id: 'series', title: 'Most categories raced', emoji: '🗺️', get: (c) => c.totals.seriesRaced, format: (v) => `${v}` },
+  { id: 'teams', title: 'Most teams driven for', emoji: '🧳', get: (c) => (c.totals.teams > 1 ? c.totals.teams : undefined), format: (v) => `${v}` },
+  { id: 'series', title: 'Most categories raced', emoji: '🗺️', get: (c) => (c.totals.seriesRaced > 1 ? c.totals.seriesRaced : undefined), format: (v) => `${v}` },
   {
     id: 'winless',
     title: 'Most starts without a win',
@@ -207,7 +212,7 @@ export const RECORD_METRICS: Metric[] = [
   { id: 'france24', title: '24 Hours of France wins', emoji: '🕛', get: (c) => c.totals.specials.france24 || undefined, format: (v) => `${v}` },
   { id: 'heartland500', title: 'Heartland 500 wins', emoji: '🏁', get: (c) => c.totals.specials.heartland500 || undefined, format: (v) => `${v}` },
   { id: 'riviera', title: 'Principality GP wins', emoji: '🛥️', get: (c) => c.totals.specials.riviera || undefined, format: (v) => `${v}` },
-  { id: 'legacy', title: 'Highest legacy score', emoji: '✨', get: (c) => c.legacy, format: (v) => `${v}` },
+  { id: 'legacy', title: 'Highest legacy score', emoji: '✨', get: (c) => c.legacy || undefined, format: (v) => `${v}` },
   {
     id: 'worstChamp',
     title: 'Lowest-rated champion',
