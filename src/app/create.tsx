@@ -311,7 +311,7 @@ export default function Create() {
               </Txt>
             )}
           </View>
-          <View style={{ marginTop: 6 }}>
+          <View style={{ marginTop: 16 }}>
             <SpinWheel slices={wheel.slices} size={size} request={request} onDone={onDone} onPressHub={spin} disabled={phase !== 'idle'} fast={auto || spinSpeed === 'fast'} winner={winner} />
           </View>
         </Animated.View>

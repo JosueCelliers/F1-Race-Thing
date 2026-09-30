@@ -260,7 +260,7 @@ export function SpinWheel({ slices, size = 320, request, onDone, onPressHub, fas
       {/* Wheel face */}
       <Animated.View style={[{ position: 'absolute', width: size, height: size }, wheelStyle]}>{wheel}</Animated.View>
       {/* Hub */}
-      <Press onPress={onPressHub} disabled={disabled} scale={0.9} feedback="none" style={{ position: 'absolute' }}>
+      <Press onPress={disabled ? undefined : onPressHub} scale={disabled ? 1 : 0.9} feedback="none" style={{ position: 'absolute' }}>
         <View
           style={{
             width: size * 0.25,

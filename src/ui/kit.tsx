@@ -72,8 +72,10 @@ export function Press({
 }) {
   const s = useSharedValue(1);
   const anim = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  const { outer, inner } = splitStyle(style);
   return (
     <Pressable
+      style={outer}
       disabled={disabled}
       onPressIn={() => {
         s.value = withSpring(scale, { damping: 18, stiffness: 400 });
@@ -87,9 +89,46 @@ export function Press({
         onPress?.();
       }}
     >
-      <Animated.View style={[anim, style, disabled && { opacity: 0.45 }]}>{children}</Animated.View>
+      <Animated.View style={[anim, inner, disabled && { opacity: 0.45 }]}>{children}</Animated.View>
     </Pressable>
   );
+}
+
+const OUTER_KEYS = new Set([
+  'flex',
+  'flexGrow',
+  'flexShrink',
+  'flexBasis',
+  'alignSelf',
+  'width',
+  'minWidth',
+  'maxWidth',
+  'margin',
+  'marginTop',
+  'marginBottom',
+  'marginLeft',
+  'marginRight',
+  'marginHorizontal',
+  'marginVertical',
+  'position',
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'zIndex',
+]);
+
+/** Layout props go on the Pressable; visual props on the animated child. */
+function splitStyle(style: StyleProp<ViewStyle>): { outer: ViewStyle; inner: ViewStyle } {
+  const flat = (StyleSheet.flatten(style) ?? {}) as Record<string, unknown>;
+  const outer: Record<string, unknown> = {};
+  const inner: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(flat)) {
+    if (OUTER_KEYS.has(k)) outer[k] = v;
+    else inner[k] = v;
+  }
+  if (outer.flex !== undefined || outer.width !== undefined || outer.flexGrow !== undefined) inner.flexGrow = 1;
+  return { outer: outer as ViewStyle, inner: inner as ViewStyle };
 }
 
 type BtnKind = 'primary' | 'gold' | 'secondary' | 'ghost' | 'danger' | 'team';

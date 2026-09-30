@@ -22,7 +22,7 @@ import { LifeEventSheet } from '../ui/LifeEventSheet';
 import { LastResultCard, NextRaceCard } from '../ui/RaceCards';
 import { Segmented } from '../ui/Segmented';
 import { StandingsTable, TeamStandingsTable } from '../ui/Standings';
-import { C, F, R, S, withAlpha } from '../ui/theme';
+import { C, F, luminance, R, S, withAlpha } from '../ui/theme';
 import { CareerTimeline } from '../ui/Timeline';
 
 type Tab = 'season' | 'standings' | 'career' | 'driver';
@@ -211,7 +211,7 @@ export default function CareerHub() {
                   {team.principal.driverId && world.drivers[team.principal.driverId]?.careerId ? ' (a former driver of yours!)' : ''}
                 </Txt>
                 <View style={{ gap: 10, marginTop: S.md }}>
-                  <StatBar label="Car performance" value={team.perf} color={team.colors.secondary === '#FFFFFF' ? C.red : team.colors.secondary} />
+                  <StatBar label="Car performance" value={team.perf} color={visibleColor(team.colors.primary, team.colors.secondary)} />
                   <StatBar label="Relationship with team" value={a.teamRelation} color={C.green} />
                   <StatBar label="Relationship with teammate" value={a.teammateRelation} color={C.blue} />
                 </View>
@@ -328,6 +328,14 @@ export default function CareerHub() {
       {quick ? <QuickResult outcome={quick} onClose={() => setQuick(null)} /> : null}
     </Screen>
   );
+}
+
+function visibleColor(a: string, b: string): string {
+  for (const c of [a, b]) {
+    const l = luminance(c);
+    if (l > 0.06 && l < 0.8) return c;
+  }
+  return C.red;
 }
 
 function fmtFans(k: number) {

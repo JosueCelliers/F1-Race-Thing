@@ -9,7 +9,8 @@ import { C, withAlpha } from './theme';
 export function StandingsTable({ world, seriesId, highlight, limit, compact }: { world: World; seriesId: string; highlight?: string; limit?: number; compact?: boolean }) {
   const ss = world.season.series[seriesId];
   if (!ss) return null;
-  let rows = standings(ss).filter((r) => r.races > 0 || ss.round === 0);
+  const all = standings(ss).filter((r) => r.races > 0 || ss.round === 0);
+  let rows = all;
   const leader = rows[0]?.points ?? 0;
   if (limit && rows.length > limit) {
     const hi = rows.findIndex((r) => r.driverId === highlight);
@@ -17,7 +18,6 @@ export function StandingsTable({ world, seriesId, highlight, limit, compact }: {
     if (hi >= limit) top[limit - 1] = rows[hi];
     rows = top;
   }
-  const all = standings(ss);
   return (
     <View style={{ gap: 2 }}>
       {rows.map((r) => {

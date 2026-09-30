@@ -248,11 +248,20 @@ export function rollIdentity(world: World, picks: Picks, rng: Rng, gender?: Gend
     if (parentId) surname = world.drivers[parentId].last;
   }
   const { first, last } = generateName(rng, nat, g, surname);
+  const looks = generateLooks(rng, nat, g);
+  if (parentId) {
+    // Children look a bit like their famous parent.
+    const parent = world.drivers[parentId];
+    looks.skin = Math.max(0, Math.min(7, parent.looks.skin + rng.int(-1, 1)));
+    if (rng.chance(0.6)) looks.hairColor = parent.looks.hairColor;
+    if (rng.chance(0.5)) looks.eyeColor = parent.looks.eyeColor;
+    if (rng.chance(0.4)) looks.nose = parent.looks.nose;
+  }
   return {
     first,
     last,
     gender: g,
-    looks: generateLooks(rng, nat, g),
+    looks,
     helmet: generateHelmet(rng, nat),
     number: rng.int(2, 99),
     parentId,
