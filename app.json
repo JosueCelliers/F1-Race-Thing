@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Chequered Lives",
+    "slug": "chequered-lives",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "chequeredlives",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#06080E",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chequeredlives.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.chequeredlives.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#06080E",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "backgroundColor": "#06080E"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#06080E",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
