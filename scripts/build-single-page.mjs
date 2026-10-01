@@ -4,6 +4,7 @@
 //
 //   npm run web:single   ->  dist-web/chequered-lives.html
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { Buffer } from 'node:buffer';
 import { extname, join } from 'node:path';
 
 const [src = 'dist-web', out = join(src, 'chequered-lives.html')] = process.argv.slice(2);
