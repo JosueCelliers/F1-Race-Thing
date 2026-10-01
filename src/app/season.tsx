@@ -5,7 +5,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { Trophy } from '../art/Badges';
 import { Flag } from '../art/Flag';
 import { series as seriesDef } from '../content/series';
-import { endSeason } from '../sim/career';
+import { endSeason, isFarewell } from '../sim/career';
 import { overall } from '../sim/drivers';
 import { useSession } from '../state/session';
 import { useGame, useWorld } from '../state/store';
@@ -53,7 +53,7 @@ export default function SeasonReview() {
     <Screen
       tint={champ ? C.gold : s?.colors.primary}
       header={<Header title={`${s?.year ?? world.year} review`} sub={sd?.name ?? 'A year on the sidelines'} back={false} />}
-      footer={<Btn label={review.retireWheel ? 'Decide your future' : 'Contract offers'} icon="chevron" onPress={() => router.replace('/offers')} />}
+      footer={<Btn label={isFarewell(world) ? 'Say goodbye' : review.retireWheel ? 'Decide your future' : 'Contract offers'} icon="chevron" onPress={() => router.replace('/offers')} />}
     >
       {s ? (
         <Animated.View entering={ZoomIn.springify().damping(14)} style={{ alignItems: 'center', marginTop: S.md }}>

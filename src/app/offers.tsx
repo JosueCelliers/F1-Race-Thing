@@ -5,7 +5,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { TeamBadge } from '../art/Badges';
 import { CarSide } from '../art/Car';
 import { series as seriesDef } from '../content/series';
-import { acceptOffer, retireCareer, stayOffer } from '../sim/career';
+import { acceptOffer, isFarewell, retireCareer, stayOffer } from '../sim/career';
 import type { WheelSlice } from '../sim/creation';
 import { ageOf } from '../sim/drivers';
 import { formatMoney, wildcardOffer } from '../sim/market';
@@ -138,7 +138,7 @@ export default function Offers() {
   };
 
   // --------------------------------------------------------------- Hunger wheel
-  if (hunger && !hungerDone) {
+  if (hunger && !hungerDone && !isFarewell(world)) {
     const slices: WheelSlice[] = [
       { id: 'stay', label: 'One more year', weight: hunger.stay, color: '#24D17E', value: 0 },
       { id: 'retire', label: 'Hang up the helmet', weight: hunger.retire, color: '#FF3B5C', value: 1 },
@@ -189,6 +189,20 @@ export default function Offers() {
         </View>
       }
     >
+      {isFarewell(world) ? (
+        <Card style={{ marginTop: S.md, borderColor: withAlpha(C.gold, 0.5) }} accent={C.gold}>
+          <Txt v="label" color={C.gold}>
+            Farewell season complete
+          </Txt>
+          <Txt v="h1" style={{ marginTop: 4 }}>
+            Time to hang up the helmet?
+          </Txt>
+          <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+            You promised {world.year} would be your last year. The paddock has its farewells ready, but these teams still want you.
+          </Txt>
+          <Btn label="Retire" icon="flag" kind="gold" style={{ marginTop: S.md }} onPress={() => retire('Retired after a farewell season.')} />
+        </Card>
+      ) : null}
       {offers.length === 0 ? (
         <Card style={{ marginTop: S.md }} accent={C.red}>
           <Txt v="h1">The phone isn’t ringing</Txt>

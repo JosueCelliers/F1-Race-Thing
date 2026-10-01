@@ -7,7 +7,7 @@ import { Portrait } from '../art/Portrait';
 import { series as seriesDef, SPECIAL_MAP } from '../content/series';
 import { family, personality } from '../content/traits';
 import { playRaceInstant } from '../sim/autoplay';
-import { answerInvite, dueInvite, forecast, nextRaceMeta, simulateReserveSeason, type RaceOutcome } from '../sim/career';
+import { answerInvite, dueInvite, forecast, nextRaceMeta, setFarewell, simulateReserveSeason, type RaceOutcome } from '../sim/career';
 import { ageOf, fullName, ovr, totalStats } from '../sim/drivers';
 import { resolveLifeEvent, topRival } from '../sim/events';
 import type { LifeEventInstance } from '../sim/types';
@@ -35,6 +35,7 @@ export default function CareerHub() {
   const [quick, setQuick] = useState<RaceOutcome | null>(null);
   // Keeps the life-event sheet open on its outcome after the sim clears `pendingEvent`.
   const [openEvent, setOpenEvent] = useState<LifeEventInstance | null>(null);
+  const [confirmFarewell, setConfirmFarewell] = useState(false);
   // Modals render above every screen, so only show ours while the hub is in front.
   const focused = useIsFocused();
   const a = world?.active;
@@ -311,7 +312,21 @@ export default function CareerHub() {
               </Txt>
             ) : null}
           </Card>
-          <Btn label="Retire at season end" kind="ghost" small icon="flag" onPress={() => router.push('/offers?retire=1')} disabled={a.phase !== 'offers'} />
+          {a.phase === 'season' ? (
+            a.flags.farewell === world.year ? (
+              <Card accent={C.gold}>
+                <Txt v="label" color={C.gold}>
+                  Farewell season
+                </Txt>
+                <Txt v="body" color={C.textDim} style={{ marginTop: 4 }}>
+                  You’ve told the world {world.year} is your last year. Make it count.
+                </Txt>
+                <Btn label="Change your mind" kind="ghost" small style={{ marginTop: S.md }} onPress={() => mutate((w) => setFarewell(w, false))} />
+              </Card>
+            ) : (
+              <Btn label="Announce your farewell season" kind="ghost" small icon="flag" onPress={() => setConfirmFarewell(true)} />
+            )
+          ) : null}
         </Animated.View>
       ) : null}
 
@@ -331,6 +346,31 @@ export default function CareerHub() {
       ) : null}
 
       {quick ? <QuickResult outcome={quick} onClose={() => setQuick(null)} /> : null}
+
+      <Modal visible={confirmFarewell && focused} transparent animationType="fade" onRequestClose={() => setConfirmFarewell(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
+          <Card>
+            <Txt v="h1">One last season?</Txt>
+            <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+              Tell the paddock that {world.year} is your final year. At the end of the season you can retire with a proper send-off, or change your mind.
+            </Txt>
+            <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
+              <Btn label="Not yet" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmFarewell(false)} />
+              <Btn
+                label="Announce it"
+                kind="gold"
+                small
+                style={{ flex: 1 }}
+                onPress={() => {
+                  setConfirmFarewell(false);
+                  haptic.success();
+                  mutate((w) => setFarewell(w, true));
+                }}
+              />
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </Screen>
   );
 }

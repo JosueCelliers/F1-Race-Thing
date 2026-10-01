@@ -162,12 +162,21 @@ export function buildWheel(id: WheelId, picks: Picks, world: World, rng: Rng): W
       const rich = fam === 'wealthy' || fam === 'dynasty';
       const nat = String(picks.nation?.value ?? 'GB');
       const slices: WheelSlice[] = [];
-      if (age <= 19) slices.push({ id: 'cadet', label: 'Formula Cadet', sub: 'The classic ladder', weight: 5, value: 'cadet' });
-      if (age >= 16) slices.push({ id: 'contender', label: 'Formula Contender', sub: 'Skip a rung', weight: rich ? 2.2 : 0.9, value: 'contender' });
-      if (age >= 17 && rich) slices.push({ id: 'apex', label: 'Formula Apex', sub: 'Money talks', weight: 0.7, value: 'apex' });
-      if (age >= 18) slices.push({ id: 'gt', label: 'GT World Series', sub: 'Sports cars', weight: 2.2, value: 'gt' });
-      if (age >= 18) slices.push({ id: 'american', label: 'American Open-Wheel', sub: 'Ovals & street fights', weight: nat === 'US' || nat === 'CA' ? 2.4 : 1.1, value: 'american' });
-      if (age >= 20) slices.push({ id: 'endurance', label: 'Global Endurance', sub: 'Privateer seat', weight: rich ? 0.8 : 0.4, value: 'endurance' });
+      // Starting far below the level of a field is hopeless rather than fun, so
+      // series out of reach of the talent rolled so far become long shots.
+      const expected = expectedRating(picks);
+      const fit = (sid: string) => {
+        const ids = teamsInSeries(world, sid).flatMap((t) => t.drivers);
+        const avg = ids.length ? ids.reduce((acc, did) => acc + overall(world.drivers[did].skills), 0) / ids.length : seriesDef(sid).ovrBand[0];
+        return clamp(1 - Math.max(0, avg - expected - 4) / 10, 0.04, 1);
+      };
+      if (age <= 19) slices.push({ id: 'cadet', label: 'Formula Cadet', sub: 'The classic ladder', weight: 5 * fit('cadet'), value: 'cadet' });
+      if (age >= 16) slices.push({ id: 'contender', label: 'Formula Contender', sub: 'Skip a rung', weight: (rich ? 2.2 : 0.9) * fit('contender'), value: 'contender' });
+      if (age >= 17 && rich) slices.push({ id: 'apex', label: 'Formula Apex', sub: 'Money talks', weight: 0.7 * fit('apex'), value: 'apex' });
+      if (age >= 18) slices.push({ id: 'gt', label: 'GT World Series', sub: 'Sports cars', weight: 2.2 * fit('gt'), value: 'gt' });
+      if (age >= 18)
+        slices.push({ id: 'american', label: 'American Open-Wheel', sub: 'Ovals & street fights', weight: (nat === 'US' || nat === 'CA' ? 2.4 : 1.1) * fit('american'), value: 'american' });
+      if (age >= 20) slices.push({ id: 'endurance', label: 'Global Endurance', sub: 'Privateer seat', weight: (rich ? 0.8 : 0.4) * fit('endurance'), value: 'endurance' });
       return { id, title: 'First championship', emoji: '🏁', blurb: 'Where does your career begin?', slices };
     }
     case 'team': {
@@ -189,6 +198,16 @@ export function buildWheel(id: WheelId, picks: Picks, world: World, rng: Rng): W
       };
     }
   }
+}
+
+/** Rating the skill wheels point to so far (mid-points of the star bands, plus age maturity). */
+export function expectedRating(picks: Picks): number {
+  const mid = (k: 'pace' | 'racecraft' | 'consistency' | 'wet') => {
+    const [lo, hi] = STAR_BANDS[clamp(Number(picks[k]?.value ?? 3), 1, 5) - 1];
+    return (lo + hi) / 2;
+  };
+  const maturity = Math.max(0, Number(picks.age?.value ?? 16) - 17);
+  return overall({ pace: mid('pace'), racecraft: mid('racecraft') + Math.min(4, maturity), consistency: mid('consistency') + Math.min(6, maturity * 2), wet: mid('wet') });
 }
 
 export function pickSlice(wheel: WheelDef, rng: Rng): number {

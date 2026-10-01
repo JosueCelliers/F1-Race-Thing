@@ -977,6 +977,28 @@ export function acceptOffer(world: World, offer: Offer | null): void {
 // Retirement
 // ---------------------------------------------------------------------------
 
+/** Announce (or take back) that the current season is the driver's last. */
+export function setFarewell(world: World, on: boolean): void {
+  const a = world.active;
+  if (!a) return;
+  const me = world.drivers[a.driverId];
+  if (on) {
+    if (a.flags.farewell === world.year) return;
+    a.flags.farewell = world.year;
+    addMoment(world, 'milestone', 'Farewell season', `${fullName(me)} announces that ${world.year} will be the final season.`, 2);
+    addNews(world, `${fullName(me)} announces retirement at the end of ${world.year}.`, { important: true });
+  } else if (a.flags.farewell) {
+    delete a.flags.farewell;
+    addMoment(world, 'milestone', 'Change of heart', `${fullName(me)} isn't done yet: the retirement plans are off.`, 1);
+    addNews(world, `${fullName(me)} makes a U-turn: no retirement after all.`);
+  }
+}
+
+/** True when the season that just ended was announced as the last one. */
+export function isFarewell(world: World): boolean {
+  return !!world.active && world.active.flags.farewell === world.year;
+}
+
 export function retireCareer(world: World, reason: string): CareerRecord {
   const a = world.active!;
   const me = world.drivers[a.driverId];
