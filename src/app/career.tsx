@@ -18,7 +18,7 @@ import { useGame, useWorld } from '../state/store';
 import { DriverCard, OvrBadge } from '../ui/DriverCard';
 import { haptic } from '../ui/haptics';
 import { Icon } from '../ui/Icon';
-import { Btn, Card, Header, IconBtn, Pill, PosBadge, Screen, SectionTitle, StatBar, Txt } from '../ui/kit';
+import { Btn, Card, Header, IconBtn, ModalScrim, Pill, PosBadge, Screen, SectionTitle, StatBar, Txt } from '../ui/kit';
 import { LifeEventSheet } from '../ui/LifeEventSheet';
 import { LastResultCard, NextRaceCard } from '../ui/RaceCards';
 import { Segmented } from '../ui/Segmented';
@@ -348,7 +348,7 @@ export default function CareerHub() {
       {quick ? <QuickResult outcome={quick} onClose={() => setQuick(null)} /> : null}
 
       <Modal visible={confirmFarewell && focused} transparent animationType="fade" onRequestClose={() => setConfirmFarewell(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
+        <ModalScrim bg="rgba(2,4,10,0.85)">
           <Card>
             <Txt v="h1">One last season?</Txt>
             <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
@@ -369,7 +369,7 @@ export default function CareerHub() {
               />
             </View>
           </Card>
-        </View>
+        </ModalScrim>
       </Modal>
     </Screen>
   );
@@ -421,7 +421,7 @@ function QuickResult({ outcome, onClose }: { outcome: RaceOutcome; onClose: () =
   const r = outcome.summary;
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
+      <ModalScrim bg="rgba(2,4,10,0.85)">
         <Animated.View entering={ZoomIn.springify().damping(15)}>
           <Card style={{ padding: 20, alignItems: 'center' }}>
             <Txt v="label" color={C.textDim}>
@@ -453,7 +453,7 @@ function QuickResult({ outcome, onClose }: { outcome: RaceOutcome; onClose: () =
             <Btn label="Continue" style={{ marginTop: S.lg, alignSelf: 'stretch' }} onPress={onClose} />
           </Card>
         </Animated.View>
-      </View>
+      </ModalScrim>
     </Modal>
   );
 }

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg';
 import { haptic } from './haptics';
 import { Icon, type IconName } from './Icon';
+import { appMaxWidth } from './screen';
 import { C, F, R, readableOn, S, shade, withAlpha } from './theme';
 
 // ---------------------------------------------------------------------------
@@ -231,6 +232,15 @@ export function IconBtn({
 // ---------------------------------------------------------------------------
 // Surfaces
 // ---------------------------------------------------------------------------
+
+/** Dimmed full-screen backdrop for modal sheets; keeps content phone-width on the web. */
+export function ModalScrim({ children, bg = 'rgba(2,4,10,0.85)', center = false }: { children: React.ReactNode; bg?: string; center?: boolean }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: bg, justifyContent: 'center', padding: S.lg }}>
+      <View style={{ width: '100%', maxWidth: appMaxWidth, alignSelf: 'center', alignItems: center ? 'center' : undefined }}>{children}</View>
+    </View>
+  );
+}
 
 export function Card({ children, style, accent, padded = true }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; accent?: string; padded?: boolean }) {
   return (

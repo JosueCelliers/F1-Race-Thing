@@ -299,4 +299,6 @@ export interface LookPartMeta {
   /** Which genders this part is generated for. */
   genders: Gender[];
   weight: number;
+  /** Optional per-gender weight overriding `weight`. */
+  genderWeight?: Partial<Record<Gender, number>>;
 }

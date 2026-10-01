@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
+import { useScreen } from './screen';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { mixSeed, Rng } from '../sim/rng';
 
@@ -43,7 +44,7 @@ function Piece({
 }
 
 export function Confetti({ count = 60, burst = 0 }: { count?: number; burst?: number }) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useScreen();
   const pieces = useMemo(() => {
     const rng = new Rng(mixSeed(0xc0f, burst, count));
     return Array.from({ length: count }, (_, i) => ({

@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { AppState, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { flushSave, useGame } from '../state/store';
+import { appMaxWidth } from '../ui/screen';
 import { C, FONT_FILES } from '../ui/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -36,17 +37,19 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
       <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: C.bg },
-          animation: 'fade_from_bottom',
-        }}
-      >
-        <Stack.Screen name="index" options={{ animation: 'fade' }} />
-        <Stack.Screen name="race" options={{ gestureEnabled: false, animation: 'fade' }} />
-        <Stack.Screen name="create" options={{ gestureEnabled: false }} />
-      </Stack>
+      <View style={{ flex: 1, width: '100%', maxWidth: appMaxWidth, alignSelf: 'center', overflow: 'hidden' }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: C.bg },
+            animation: 'fade_from_bottom',
+          }}
+        >
+          <Stack.Screen name="index" options={{ animation: 'fade' }} />
+          <Stack.Screen name="race" options={{ gestureEnabled: false, animation: 'fade' }} />
+          <Stack.Screen name="create" options={{ gestureEnabled: false }} />
+        </Stack>
+      </View>
     </GestureHandlerRootView>
   );
 }

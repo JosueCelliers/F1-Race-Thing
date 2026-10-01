@@ -1,6 +1,7 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, Modal, ScrollView, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Modal, ScrollView, View } from 'react-native';
+import { useScreen } from '../ui/screen';
 import Animated, { cancelAnimation, Easing, FadeIn, FadeInDown, runOnJS, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Flag } from '../art/Flag';
@@ -20,7 +21,7 @@ import { useGame, useWorld } from '../state/store';
 import { HighlightRows, PlayAllChip } from '../ui/HighlightList';
 import { haptic } from '../ui/haptics';
 import { Icon } from '../ui/Icon';
-import { Backdrop, Btn, Card, Header, IconBtn, Pill, PosBadge, Press, Screen, SectionTitle, Txt } from '../ui/kit';
+import { Backdrop, Btn, Card, Header, IconBtn, ModalScrim, Pill, PosBadge, Press, Screen, SectionTitle, Txt } from '../ui/kit';
 import { C, F, R, S, withAlpha } from '../ui/theme';
 
 const STEP_MS = 2300;
@@ -81,7 +82,7 @@ function PreRace({ meta, onQuali }: { meta: RaceMeta; onQuali: (c: 'push' | 'ban
   const world = useWorld()!;
   const s = seriesDef(meta.seriesId);
   const fc = forecast(world, meta);
-  const { width } = useWindowDimensions();
+  const { width } = useScreen();
   return (
     <Screen tint={s.color} header={<Header title={meta.round.name} sub={`${s.name}${meta.oneOff ? ' · One-off' : ` · Round ${meta.roundIndex + 1}/${meta.totalRounds}`}`} />}>
       <Animated.View entering={FadeInDown.duration(400)}>
@@ -206,7 +207,7 @@ function Live({
 }) {
   const world = useWorld()!;
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useScreen();
   const eng = prep.engine;
   const dir = prep.director;
   const s = seriesDef(prep.meta.seriesId);
@@ -576,7 +577,7 @@ function Live({
       ) : null}
 
       <Modal visible={confirmLeave} transparent animationType="fade" onRequestClose={() => setConfirmLeave(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
+        <ModalScrim bg="rgba(2,4,10,0.85)">
           <Card>
             <Txt v="h1">Skip to the result?</Txt>
             <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
@@ -595,7 +596,7 @@ function Live({
               />
             </View>
           </Card>
-        </View>
+        </ModalScrim>
       </Modal>
     </View>
   );

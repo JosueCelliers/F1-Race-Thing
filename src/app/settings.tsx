@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Modal, View } from 'react-native';
 import { useGame } from '../state/store';
 import { Icon, type IconName } from '../ui/Icon';
-import { Btn, Card, Header, Press, Screen, SectionTitle, Txt } from '../ui/kit';
+import { Btn, Card, Header, ModalScrim, Press, Screen, SectionTitle, Txt } from '../ui/kit';
 import { C, R, S } from '../ui/theme';
 
 function Row({ icon, title, sub, right }: { icon: IconName; title: string; sub?: string; right: React.ReactNode }) {
@@ -128,7 +128,7 @@ export default function Settings() {
       </Card>
 
       <Modal visible={confirm > 0} transparent animationType="fade" onRequestClose={() => setConfirm(0)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
+        <ModalScrim bg="rgba(2,4,10,0.85)">
           <Card>
             <Txt v="h1">{confirm === 1 ? 'Reset the universe?' : 'Are you absolutely sure?'}</Txt>
             <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
@@ -152,7 +152,7 @@ export default function Settings() {
               />
             </View>
           </Card>
-        </View>
+        </ModalScrim>
       </Modal>
     </Screen>
   );

@@ -98,7 +98,7 @@ export function generateName(rng: Rng, nationId: string, gender: Gender, surname
 
 function pickPart(rng: Rng, parts: LookPartMeta[], gender: Gender, boost?: Record<string, number>): string {
   const pool = parts.filter((p) => p.genders.includes(gender));
-  return rng.weighted(pool, (p) => p.weight * (boost?.[p.id] ?? 1)).id;
+  return rng.weighted(pool, (p) => (p.genderWeight?.[gender] ?? p.weight) * (boost?.[p.id] ?? 1)).id;
 }
 
 export function generateLooks(rng: Rng, nationId: string, gender: Gender): Looks {

@@ -6,7 +6,7 @@ import type { WheelSlice } from '../sim/creation';
 import { describeEffects, type EventResolution } from '../sim/events';
 import type { LifeEventInstance } from '../sim/types';
 import { haptic } from './haptics';
-import { Btn, Card, Press, Txt } from './kit';
+import { Btn, Card, ModalScrim, Press, Txt } from './kit';
 import { SpinWheel, type SpinRequest } from './SpinWheel';
 import { C, R, S, withAlpha } from './theme';
 
@@ -73,7 +73,7 @@ export function LifeEventSheet({ event, onChoose, onClose }: { event: LifeEventI
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={() => {}}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.82)', justifyContent: 'center', padding: S.lg }}>
+      <ModalScrim bg="rgba(2,4,10,0.82)">
         <Animated.View entering={FadeInDown.springify().damping(16)}>
           <Card style={{ padding: 20 }} accent={C.gold}>
             <Txt v="label" color={C.gold}>
@@ -138,7 +138,7 @@ export function LifeEventSheet({ event, onChoose, onClose }: { event: LifeEventI
             )}
           </Card>
         </Animated.View>
-      </View>
+      </ModalScrim>
     </Modal>
   );
 }

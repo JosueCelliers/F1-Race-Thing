@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Modal, TextInput, View } from 'react-native';
+import { useScreen } from '../ui/screen';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { Flag } from '../art/Flag';
 import { series as seriesDef } from '../content/series';
@@ -12,7 +13,7 @@ import { mixSeed, Rng } from '../sim/rng';
 import { useGame } from '../state/store';
 import { DriverCard } from '../ui/DriverCard';
 import { haptic } from '../ui/haptics';
-import { Btn, Card, Header, IconBtn, Pill, Screen, Txt } from '../ui/kit';
+import { Btn, Card, Header, IconBtn, ModalScrim, Pill, Screen, Txt } from '../ui/kit';
 import { SpinWheel, type SpinRequest } from '../ui/SpinWheel';
 import { C, F, R, S, withAlpha } from '../ui/theme';
 
@@ -43,7 +44,7 @@ export default function Create() {
   const ensureWorld = useGame((s) => s.ensureWorld);
   const mutate = useGame((s) => s.mutate);
   const spinSpeed = useGame((s) => s.settings.spinSpeed);
-  const { width } = useWindowDimensions();
+  const { width } = useScreen();
   const [seed] = useState(() => Math.floor(Math.random() * 2 ** 31));
   const rng = useRef(new Rng(seed));
   const [step, setStep] = useState(0);
@@ -221,7 +222,7 @@ export default function Create() {
           </Txt>
         </Card>
         <Modal visible={renaming} transparent animationType="fade" onRequestClose={() => setRenaming(false)}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 24 }}>
+          <ModalScrim bg="rgba(0,0,0,0.7)">
             <Card>
               <Txt v="h1">Rename driver</Txt>
               {(['first', 'last'] as const).map((k) => (
@@ -249,7 +250,7 @@ export default function Create() {
                 />
               </View>
             </Card>
-          </View>
+          </ModalScrim>
         </Modal>
       </Screen>
     );

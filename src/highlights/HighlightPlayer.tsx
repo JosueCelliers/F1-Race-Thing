@@ -6,7 +6,8 @@
  */
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, useWindowDimensions, View } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
+import { useScreen } from '../ui/screen';
 import Animated, { cancelAnimation, Easing, FadeIn, FadeOut, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SERIES } from '../content/series';
@@ -186,7 +187,7 @@ export function HighlightPlayer({
   index?: number;
   total?: number;
 }) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useScreen();
   const insets = useSafeAreaInsets();
   const prog = useSharedValue(0);
   const done = useRef(false);

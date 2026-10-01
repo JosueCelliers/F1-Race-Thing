@@ -22,7 +22,7 @@ export const HAIR_PARTS: LookPartMeta[] = [
   { id: 'fade', genders: ['m'], weight: 2 },
   { id: 'afro', genders: ['m', 'f'], weight: 1 },
   { id: 'bald', genders: ['m'], weight: 0.6 },
-  { id: 'long', genders: ['m', 'f'], weight: 1.2 },
+  { id: 'long', genders: ['m', 'f'], weight: 1.2, genderWeight: { m: 0.35 } },
   { id: 'ponytail', genders: ['f'], weight: 3 },
   { id: 'bob', genders: ['f'], weight: 2 },
   { id: 'bun', genders: ['f'], weight: 2 },

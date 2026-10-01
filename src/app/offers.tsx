@@ -14,7 +14,7 @@ import type { Offer, World } from '../sim/types';
 import { useSession } from '../state/session';
 import { useGame, useWorld } from '../state/store';
 import { haptic } from '../ui/haptics';
-import { Btn, Card, Header, Pill, Screen, SectionTitle, Stars, Txt } from '../ui/kit';
+import { Btn, Card, Header, ModalScrim, Pill, Screen, SectionTitle, Stars, Txt } from '../ui/kit';
 import { SpinWheel, type SpinRequest } from '../ui/SpinWheel';
 import { C, R, S, withAlpha } from '../ui/theme';
 
@@ -223,7 +223,7 @@ export default function Offers() {
       <Btn label="Retire from racing" icon="flag" kind="ghost" onPress={() => setConfirmRetire(true)} />
 
       <Modal visible={confirmRetire} transparent animationType="fade" onRequestClose={() => setConfirmRetire(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
+        <ModalScrim bg="rgba(2,4,10,0.85)">
           <Card>
             <Txt v="h1">Retire now?</Txt>
             <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
@@ -234,11 +234,11 @@ export default function Offers() {
               <Btn label="Retire" kind="danger" small style={{ flex: 1 }} onPress={() => retire('Walked away on their own terms.')} />
             </View>
           </Card>
-        </View>
+        </ModalScrim>
       </Modal>
 
       <Modal visible={!!fate} transparent animationType="fade" onRequestClose={() => setFate(null)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.9)', justifyContent: 'center', alignItems: 'center', padding: S.lg }}>
+        <ModalScrim bg="rgba(2,4,10,0.9)" center>
           <Txt v="title" center>
             Wheel of Fate
           </Txt>
@@ -275,7 +275,7 @@ export default function Offers() {
               <Btn label="Sign it" icon="check" kind="gold" onPress={() => sign(fateResult)} />
             </Animated.View>
           ) : null}
-        </View>
+        </ModalScrim>
       </Modal>
     </Screen>
   );

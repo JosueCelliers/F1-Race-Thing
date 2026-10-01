@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
+import { useScreen } from '../ui/screen';
 import Animated, { Easing, FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { ChequeredMark } from '../art/Badges';
 import { CarSide } from '../art/Car';
@@ -16,7 +17,7 @@ import { Btn, Card, IconBtn, Press, Screen, Txt } from '../ui/kit';
 import { C, F, R, S, withAlpha } from '../ui/theme';
 
 function Hero() {
-  const { width } = useWindowDimensions();
+  const { width } = useScreen();
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withRepeat(withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }), -1, true);
