@@ -138,7 +138,7 @@ export default function Create() {
         identity={identity}
         skills={skills}
         onStart={start}
-        onBack={() => router.replace('/')}
+        onBack={() => router.dismissTo('/')}
         onNewLook={() => {
           haptic.tap();
           setIdentity({ ...identity, looks: generateLooks(identRng.current, nat, identity.gender) });
@@ -166,7 +166,7 @@ export default function Create() {
       <View style={{ flex: 1, paddingTop: insets.top + S.sm, paddingBottom: insets.bottom + S.md, paddingHorizontal: S.lg }}>
         {/* Top bar: back, progress */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.md }}>
-          <IconBtn icon="back" label="Back to home" onPress={() => router.replace('/')} />
+          <IconBtn icon="back" label="Back to home" onPress={() => router.dismissTo('/')} />
           <View style={{ flex: 1, gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Txt v="micro" color={C.textDim}>

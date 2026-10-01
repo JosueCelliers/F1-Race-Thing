@@ -77,7 +77,7 @@ export default function CareerHub() {
     note = pendingInvite ? 'Answer the invitation first' : a.pendingEvent ? 'Something in the paddock needs you first' : undefined;
     dock = (
       <>
-        <Btn label="Watch the race" icon="play" sub="Live broadcast · your calls" onPress={() => router.push('/race?mode=watch')} disabled={blocked} style={{ flex: 1 }} testID="watch-race" />
+        <Btn label="Watch the race" sub="Live, with your calls" onPress={() => router.push('/race?mode=watch')} disabled={blocked} style={{ flex: 1 }} testID="watch-race" />
         <DockBtn icon="skip" label="Quick result" onPress={quickRace} disabled={blocked} testID="quick-result" />
       </>
     );
@@ -97,7 +97,7 @@ export default function CareerHub() {
       <ScrollView style={{ flex: 1 }} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: S.xl }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: S.lg, paddingTop: S.sm, gap: S.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.sm }}>
-            <IconBtn icon="home" label="Home" onPress={() => router.replace('/')} />
+            <IconBtn icon="home" label="Home" onPress={() => router.dismissTo('/')} />
             <View style={{ flex: 1 }}>
               <Txt v="micro" color={C.red}>
                 {world.year} season

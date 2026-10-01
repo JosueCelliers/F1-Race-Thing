@@ -12,8 +12,14 @@ let dbPromise: Promise<IDBDatabase | null> | null = null;
 function openDb(): Promise<IDBDatabase | null> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve) => {
+    // Some sandboxed frames never answer an open request: fall back to localStorage rather than hang the app.
+    const timer = setTimeout(() => resolve(null), 2500);
+    const done = (db: IDBDatabase | null) => {
+      clearTimeout(timer);
+      resolve(db);
+    };
     try {
-      if (typeof indexedDB === 'undefined') return resolve(null);
+      if (typeof indexedDB === 'undefined') return done(null);
       const req = indexedDB.open(DB_NAME, 1);
       req.onupgradeneeded = () => req.result.createObjectStore(STORE);
       req.onsuccess = () => {
@@ -26,12 +32,12 @@ function openDb(): Promise<IDBDatabase | null> {
         db.onclose = () => {
           dbPromise = null;
         };
-        resolve(db);
+        done(db);
       };
-      req.onerror = () => resolve(null);
-      req.onblocked = () => resolve(null);
+      req.onerror = () => done(null);
+      req.onblocked = () => done(null);
     } catch {
-      resolve(null);
+      done(null);
     }
   });
   return dbPromise;
@@ -90,17 +96,18 @@ function parse<T>(v: string | null | undefined): T | null {
 }
 
 async function read<T>(key: string): Promise<T | null> {
+  const local = lsGet(key);
   const db = await openDb();
-  if (!db) return parse<T>(lsGet(key));
-  const v = await tx<string>('readonly', (s) => s.get(key) as IDBRequest<string>);
-  if (typeof v === 'string') return parse<T>(v);
-  // Migrate a save written by an older version (localStorage) into IndexedDB.
-  const legacy = lsGet(key);
-  if (legacy) {
-    await tx('readwrite', (s) => s.put(legacy, key));
-    lsRemove(key);
+  if (!db) return parse<T>(local);
+  if (local) {
+    // A localStorage copy is always the newest write (an older build, or a session where IndexedDB was
+    // unavailable): successful IndexedDB writes clear it. Move it across.
+    const ok = (await tx('readwrite', (s) => s.put(local, key))) !== undefined;
+    if (ok) lsRemove(key);
+    return parse<T>(local);
   }
-  return parse<T>(legacy);
+  const v = await tx<string>('readonly', (s) => s.get(key) as IDBRequest<string>);
+  return typeof v === 'string' ? parse<T>(v) : null;
 }
 
 function write(key: string, data: unknown): Promise<void> {
@@ -108,7 +115,8 @@ function write(key: string, data: unknown): Promise<void> {
   const json = JSON.stringify(data);
   return openDb().then(async (db) => {
     const ok = db ? (await tx('readwrite', (s) => s.put(json, key))) !== undefined : false;
-    if (!ok) lsSet(key, json);
+    if (ok) lsRemove(key);
+    else lsSet(key, json);
   });
 }
 

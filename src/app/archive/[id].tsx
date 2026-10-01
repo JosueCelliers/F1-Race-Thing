@@ -105,7 +105,7 @@ export default function CareerDetail() {
       <Backdrop tint={tier.color} intensity={0.9} />
       <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: S.xl }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.sm, paddingHorizontal: S.lg, paddingTop: S.sm }}>
-          <IconBtn icon="back" label="Back" onPress={() => router.replace(isFresh ? '/' : '/archive')} />
+          <IconBtn icon="back" label="Back" onPress={() => router.dismissTo(isFresh ? '/' : '/archive')} />
           <View style={{ flex: 1 }}>
             <Txt v="micro" color={C.red}>
               {isFresh ? 'Career over' : `Career #${rec.index}`}

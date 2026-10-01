@@ -94,15 +94,20 @@ export function PreRace({ meta, onQuali }: { meta: RaceMeta; onQuali: (c: 'push'
           <View style={styles.poster}>
             <CornerTicks color={C.lineStrong} />
             <TrackMap trackId={t.id} width={mapW - 2} height={mapH} variant="broadcast" sectors />
-            <View style={{ position: 'absolute', left: 12, top: 10, flexDirection: 'row', gap: 10 }}>
+            {/* Sector key on its own strip, so it never sits on the track */}
+            <View style={{ alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, height: 30, borderTopWidth: 1, borderColor: C.line }}>
               {['S1', 'S2', 'S3'].map((x, i) => (
-                <View key={x} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 10, height: 3, backgroundColor: [C.red, '#E9E4DA', '#8C94A4'][i] }} />
+                <View key={x} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <View style={{ width: 12, height: 3, backgroundColor: [C.red, '#E9E4DA', '#8C94A4'][i] }} />
                   <Txt v="micro" color={C.textMute}>
                     {x}
                   </Txt>
                 </View>
               ))}
+              <View style={{ flex: 1 }} />
+              <Txt v="micro" color={C.textMute}>
+                {t.lengthKm.toFixed(1)} km lap
+              </Txt>
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: S.md }}>
@@ -156,6 +161,7 @@ const SLOT_H = 46;
 const ROW_STEP = 38;
 
 export function GridView({ prep, onStart }: { prep: PreparedRace; onStart: () => void }) {
+  const world = useWorld()!;
   const insets = useSafeAreaInsets();
   const e = prep.engine;
   const p = e.playerIndex;
@@ -222,7 +228,7 @@ export function GridView({ prep, onStart }: { prep: PreparedRace; onStart: () =>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={[styles.slotCode, me && { color: '#FFFFFF' }]}>{en.code}</Text>
                   <Txt v="micro" color={C.textMute} numberOfLines={1} style={{ letterSpacing: 0.6 }}>
-                    {me ? 'You' : en.name.split(' ').slice(-1)[0]}
+                    {me ? 'You' : (world.teams[en.teamId]?.name ?? en.name)}
                   </Txt>
                 </View>
                 <Txt v="micro" color={C.textMute}>
@@ -380,7 +386,7 @@ export function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOu
         </View>
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: insets.bottom + S.md }]}>
-        <Btn label="Continue" sub={`Championship P${outcome.standingsPos}`} onPress={() => router.replace('/career')} testID="result-continue" />
+        <Btn label="Continue" sub={`Championship P${outcome.standingsPos}`} onPress={() => router.dismissTo('/career')} testID="result-continue" />
       </View>
       {reel !== null ? <HighlightReel specs={hls.map((h) => h.spec)} start={reel} onClose={() => setReel(null)} /> : null}
     </View>

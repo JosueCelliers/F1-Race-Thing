@@ -169,7 +169,7 @@ export default function Settings() {
               else {
                 reset();
                 setConfirm(0);
-                router.replace('/');
+                router.dismissTo('/');
               }
             }}
           />

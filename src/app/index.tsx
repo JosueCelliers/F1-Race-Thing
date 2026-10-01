@@ -65,13 +65,13 @@ function Streak({ y, w, delay, color, span }: { y: number; w: number; delay: num
 function Stage({ width, slot, car, idle }: { width: number; slot: { y: number; h: number }; car: HeroCarSpec; idle: SharedValue<number> }) {
   const room = slot.h - TICKER_H - 6;
   // Car plus reflection must fit the slot; otherwise it is as wide as the phone allows.
-  const carW = Math.min(width * 0.96, 560, room / (0.291 * 1.42));
+  const carW = Math.max(60, Math.min(width * 0.96, 560, room / (0.291 * 1.42)));
   const carH = carW * (64 / 220);
   const reflH = carH * 0.42;
   const horizon = slot.y + slot.h - TICKER_H - reflH;
   const carTop = horizon - carH * 0.97;
   const wallH = horizon - slot.y;
-  const numSize = Math.min(wallH * 1.25, width * 0.92);
+  const numSize = Math.max(40, Math.min(wallH * 1.25, width * 0.92));
   const numTop = slot.y - 30;
   const lightCy = horizon - carH * 0.45;
 
@@ -237,6 +237,8 @@ export default function Home() {
 
   const onSlot = (e: LayoutChangeEvent) => {
     const { y, height } = e.nativeEvent.layout;
+    // A screen hidden under the stack can report a collapsed layout: keep the last real one.
+    if (height < 120) return;
     if (!slot || Math.abs(slot.y - y) > 0.5 || Math.abs(slot.h - height) > 0.5) setSlot({ y, h: height });
   };
 

@@ -142,7 +142,7 @@ export default function Offers() {
     haptic.success();
     mutate((w) => acceptOffer(w, o));
     setReview(null);
-    router.replace('/career');
+    router.dismissTo('/career');
   };
 
   const retire = (reason: string) => {

@@ -262,7 +262,7 @@ export function DockBtn({ icon, label, onPress, disabled, testID }: { icon: Icon
     <Press onPress={onPress} disabled={disabled} label={label} testID={testID}>
       <View
         style={{
-          width: 76,
+          width: 68,
           height: 62,
           backgroundColor: C.surface2,
           borderWidth: 1,
