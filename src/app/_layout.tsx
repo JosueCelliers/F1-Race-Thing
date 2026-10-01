@@ -3,9 +3,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useGame } from '../state/store';
+import { flushSave, useGame } from '../state/store';
 import { C, FONT_FILES } from '../ui/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -22,6 +22,14 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded && ready) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded, ready]);
+
+  // Saves are debounced; write immediately when the app goes to the background.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') flushSave();
+    });
+    return () => sub.remove();
+  }, []);
 
   if (!fontsLoaded || !ready) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
 

@@ -95,6 +95,8 @@ export function useWorld(): World | null {
 }
 
 export function flushSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = undefined;
   const w = useGame.getState().world;
   if (w) persist.saveWorld(w);
 }
