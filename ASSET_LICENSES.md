@@ -19,6 +19,17 @@ What the OFL means here: the fonts can be bundled with and embedded in a commerc
 
 Some UI text (life events, records, trophy cabinet) contains standard Unicode emoji characters. The device draws them with its own system emoji font: Apple Color Emoji on iOS, Noto Color Emoji on Android, the operating system's font on the web. No emoji image files are bundled with the app.
 
+### Assets bundled by the framework
+
+These ship in the app binary because dependencies include them. The game's own screens don't use them.
+
+| Asset | Pulled in by | Author | Source | Licence |
+| --- | --- | --- | --- | --- |
+| Material Symbols icon font (`MaterialSymbols_400Regular.ttf`, ~1 MB) | `expo-router` → `expo-symbols` → `@expo-google-fonts/material-symbols` 0.4.48 (Android symbol rendering) | Google | https://github.com/google/material-design-icons, https://fonts.google.com/icons | Apache License 2.0 (`node_modules/@expo-google-fonts/material-symbols/LICENSE_FONT`) |
+| Navigation and fallback-screen icons (`arrow_down.png`, `back-icon.png`, `unmatched.png`, …) | `expo-router` 57 (includes React Navigation elements) | Expo / React Navigation contributors | https://github.com/expo/expo | MIT |
+
+These are credited in Settings → Open-source licences. Before a store release, also bundle the full licence texts. A licence-report tool run over `node_modules` works for this.
+
 ## Original assets (made for this project)
 
 | Asset | Location | Notes |
@@ -37,4 +48,4 @@ Some UI text (life events, records, trophy cabinet) contains standard Unicode em
 
 ## Code dependencies
 
-The npm packages listed in `package.json` (Expo, React Native, Reanimated, react-native-svg, zustand and others) are open source under MIT, BSD or Apache-2.0 licences. Their licence files ship inside each package. The game uses no images, sounds or fonts from them. `@expo-google-fonts/material-symbols` arrives only as a transitive dependency of `expo-router` and is not used.
+The npm packages listed in `package.json` (Expo, React Native, Reanimated, react-native-svg, zustand and others) are open source under MIT, BSD or Apache-2.0 licences. Their licence files ship inside each package. Apart from the framework-bundled assets listed above, the game uses no images, sounds or fonts from them.

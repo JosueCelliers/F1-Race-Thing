@@ -115,6 +115,18 @@ export default function Settings() {
         </Txt>
       </Card>
 
+      <SectionTitle title="Open-source licences" />
+      <Card>
+        {LICENCES.map((l, i) => (
+          <View key={l.name} style={{ marginTop: i ? 10 : 0 }}>
+            <Txt v="bodyStrong">{l.name}</Txt>
+            <Txt v="small" color={C.textDim}>
+              {l.by} · {l.licence}
+            </Txt>
+          </View>
+        ))}
+      </Card>
+
       <Modal visible={confirm > 0} transparent animationType="fade" onRequestClose={() => setConfirm(0)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(2,4,10,0.85)', justifyContent: 'center', padding: S.lg }}>
           <Card>
@@ -145,3 +157,12 @@ export default function Settings() {
     </Screen>
   );
 }
+
+const LICENCES = [
+  { name: 'Barlow, Barlow Condensed', by: 'The Barlow Project Authors', licence: 'SIL Open Font License 1.1' },
+  { name: 'Material Symbols (bundled by Expo Router)', by: 'Google', licence: 'Apache License 2.0' },
+  { name: 'Expo, Expo Router, React Native, React', by: '650 Industries, Meta Platforms and contributors', licence: 'MIT' },
+  { name: 'Reanimated, Worklets, Gesture Handler, Screens', by: 'Software Mansion and contributors', licence: 'MIT' },
+  { name: 'react-native-svg, safe-area-context', by: 'Contributors', licence: 'MIT' },
+  { name: 'zustand', by: 'Paul Henschel and contributors', licence: 'MIT' },
+];
