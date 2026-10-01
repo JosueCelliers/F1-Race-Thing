@@ -108,7 +108,7 @@ export default function WorldScreen() {
                     {c.isPlayer ? ' ★' : ''}
                   </Txt>
                   <Txt v="small" color={C.textMute} numberOfLines={1}>
-                    {c.teamName} · {c.wins} wins · {c.points} pts
+                    {c.teamName} · {c.wins} win{c.wins === 1 ? '' : 's'} · {c.points} pts
                   </Txt>
                 </View>
               </View>

@@ -302,7 +302,7 @@ export default function CareerHub() {
               <View key={sid} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
                 <Txt v="bodyStrong">{seriesDef(sid).name}</Txt>
                 <Txt v="small" color={C.textDim}>
-                  {st.starts} starts · {st.wins} W · {st.podiums} P · {st.titles} titles
+                  {st.starts} starts · {st.wins} W · {st.podiums} P · {st.titles} title{st.titles === 1 ? '' : 's'}
                 </Txt>
               </View>
             ))}

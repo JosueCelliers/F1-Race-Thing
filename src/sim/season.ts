@@ -378,6 +378,8 @@ export function finishSeason(world: World): SeasonFinish {
     });
     for (const team of teamsInSeries(world, s.id)) {
       if (!teams.find((t) => t.teamId === team.id)) team.history.push({ year: world.year, pos: teams.length + 1, pts: 0 });
+      // Only recent form matters to the simulation; keep the save small.
+      if (team.history.length > 20) team.history.splice(0, team.history.length - 20);
     }
   }
   world.phase = 'offseason';

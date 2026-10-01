@@ -96,8 +96,11 @@ export function verdictFor(d: Driver, totals: CareerTotals, legacy: number): Ver
       blurb = `${primeTitles}× Formula Prime champion with ${wins} career wins. They will name corners after ${name}.`;
       break;
     case 'great':
-      title = primeTitles >= 1 ? 'World Champion' : 'Multiple Champion';
-      blurb = primeTitles >= 1 ? `${name} reached the summit: Formula Prime champion, ${wins} wins in all.` : `${totals.titles} championships and ${wins} wins across ${totals.seriesRaced} series.`;
+      title = primeTitles >= 1 ? 'World Champion' : totals.titles >= 2 ? 'Multiple Champion' : totals.titles === 1 ? 'Crowned Champion' : 'Serial Winner';
+      blurb =
+        primeTitles >= 1
+          ? `${name} reached the summit: Formula Prime champion, ${wins} wins in all.`
+          : `${totals.titles ? `${totals.titles} championship${totals.titles > 1 ? 's' : ''} and ` : ''}${wins} wins across ${totals.seriesRaced} series.`;
       break;
     case 'star': {
       const endu = d.stats.endurance?.wins ?? 0;

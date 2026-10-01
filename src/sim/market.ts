@@ -161,7 +161,12 @@ export function processOffseason(world: World): OffseasonReport {
     if (reset) world.regsReset[s.id] = nextYear + rng.int(6, 9);
     for (const t of teamsInSeries(world, s.id)) {
       const lastPos = t.history[t.history.length - 1]?.pos ?? 5;
-      t.perf = clamp(t.perf + rng.normal(0, 3.2) + (t.budget - 60) * 0.05 + (62 - t.perf) * 0.08 + (reset ? rng.normal(0, 9) : 0), 40, 99);
+      // Money helps, but the field converges on whoever is ahead: rivals copy the
+      // best ideas, champions lose staff, and rule changes reshuffle the order.
+      let perf = t.perf + rng.normal(0, 3.4) + (t.budget - 60) * 0.035 + (66 - t.perf) * 0.15;
+      if (lastPos === 1) perf -= rng.float(1, 4);
+      if (reset) perf = perf * 0.5 + (64 + rng.normal(0, 12)) * 0.5;
+      t.perf = clamp(perf, 40, 97);
       t.reliability = clamp(t.reliability + rng.normal(0, 3) + (t.budget - 60) * 0.03 + (82 - t.reliability) * 0.1, 55, 98);
       t.prestige = clamp(t.prestige * 0.88 + (t.perf + (lastPos === 1 ? 10 : 0)) * 0.12, 20, 100);
       t.budget = clamp(t.budget + (t.prestige - t.budget) * 0.1 + rng.normal(0, 3), 20, 100);
@@ -533,12 +538,18 @@ export function pruneDrivers(world: World): void {
   for (const d of Object.values(world.drivers)) if (d.parentId) keep.add(d.parentId);
   if (world.active) for (const id of Object.keys(world.active.rivals)) keep.add(id);
   for (const d of Object.values(world.drivers)) {
-    if (d.status !== 'retired' || d.careerId || keep.has(d.id)) continue;
-    const wins = Object.values(d.stats).reduce((a, s) => a + s.wins, 0);
-    const primeStarts = d.stats.prime?.starts ?? 0;
-    if (wins === 0 && primeStarts < 30 && world.year - (d.retiredYear ?? world.year) > 2) {
-      delete world.drivers[d.id];
+    if (d.status !== 'retired' || d.careerId) continue;
+    const longGone = world.year - (d.retiredYear ?? world.year) > 2;
+    if (!keep.has(d.id)) {
+      const wins = Object.values(d.stats).reduce((a, s) => a + s.wins, 0);
+      const primeStarts = d.stats.prime?.starts ?? 0;
+      if (wins === 0 && primeStarts < 30 && longGone) {
+        delete world.drivers[d.id];
+        continue;
+      }
     }
+    // Retired AI drivers kept for history only need their totals, not every season.
+    if (longGone && d.log.length > 1) d.log = d.log.slice(-1);
   }
 }
 

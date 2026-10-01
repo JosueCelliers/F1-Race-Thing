@@ -319,7 +319,8 @@ export function HighlightReel({ specs, start = 0, onClose }: { specs: HighlightS
   const spec = specs[i];
   if (!spec) return null;
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#04060B' }} />
       <HighlightPlayer
         key={i}
         spec={spec}
