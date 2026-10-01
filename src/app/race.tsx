@@ -1,28 +1,29 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+/**
+ * A race weekend: event poster and qualifying call, the starting grid, the
+ * live broadcast with decisions and highlights, then the result.
+ */
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, Modal, ScrollView, View } from 'react-native';
-import { useScreen } from '../ui/screen';
-import Animated, { cancelAnimation, Easing, FadeIn, FadeInDown, runOnJS, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
+import { BackHandler, View, type LayoutChangeEvent } from 'react-native';
+import { cancelAnimation, Easing, runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Flag } from '../art/Flag';
-import { TrackMap } from '../art/TrackMap';
 import { series as seriesDef } from '../content/series';
-import { HighlightPlayer, HighlightReel } from '../highlights/HighlightPlayer';
-import { TrackBroadcast, type Segment } from '../race/TrackBroadcast';
+import { HighlightPlayer } from '../highlights/HighlightPlayer';
+import { BattleBoard, ControlDock, EventStrip, FullTiming, ProgressRail, RaceTopBar, Telemetry } from '../race/Hud';
 import { MomentSheet } from '../race/MomentSheet';
-import { gapLabel, Tower, TyreDot } from '../race/Tower';
-import { finishRace, forecast, nextRaceMeta, prepareRace, specFromMoment, type PreparedRace, type RaceExtras, type RaceMeta, type RaceOutcome } from '../sim/career';
+import { GridView, PreRace, Results } from '../race/Stages';
+import { TrackBroadcast, type Segment } from '../race/TrackBroadcast';
+import { finishRace, nextRaceMeta, prepareRace, specFromMoment, type PreparedRace, type RaceExtras, type RaceMeta, type RaceOutcome } from '../sim/career';
 import { topRival } from '../sim/events';
-import type { Moment, MomentResolution } from '../sim/race/moments';
 import type { Snapshot } from '../sim/race/engine';
+import type { Moment, MomentResolution } from '../sim/race/moments';
 import { Rng } from '../sim/rng';
 import type { HighlightSpec } from '../sim/types';
 import { useGame, useWorld } from '../state/store';
-import { HighlightRows, PlayAllChip } from '../ui/HighlightList';
 import { haptic } from '../ui/haptics';
-import { Icon } from '../ui/Icon';
-import { Backdrop, Btn, Card, Header, IconBtn, ModalScrim, Pill, PosBadge, Press, Screen, SectionTitle, Txt } from '../ui/kit';
-import { C, F, R, S, withAlpha } from '../ui/theme';
+import { Backdrop, Btn, Screen, SheetModal, Txt } from '../ui/kit';
+import { useScreen } from '../ui/screen';
+import { C, S, withAlpha } from '../ui/theme';
 
 const STEP_MS = 2300;
 
@@ -75,116 +76,6 @@ export default function Race() {
 }
 
 // ---------------------------------------------------------------------------
-// Pre-race: event card + qualifying decision
-// ---------------------------------------------------------------------------
-
-function PreRace({ meta, onQuali }: { meta: RaceMeta; onQuali: (c: 'push' | 'banker') => void }) {
-  const world = useWorld()!;
-  const s = seriesDef(meta.seriesId);
-  const fc = forecast(world, meta);
-  const { width } = useScreen();
-  return (
-    <Screen tint={s.color} header={<Header title={meta.round.name} sub={`${s.name}${meta.oneOff ? ' · One-off' : ` · Round ${meta.roundIndex + 1}/${meta.totalRounds}`}`} />}>
-      <Animated.View entering={FadeInDown.duration(400)}>
-        <Card style={{ alignItems: 'center', paddingVertical: S.lg }}>
-          <TrackMap trackId={meta.track.id} width={width - 64} height={210} variant="broadcast" sectors />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: S.sm }}>
-            <Flag id={meta.track.nation} width={24} />
-            <Txt v="h2">{meta.track.name}</Txt>
-          </View>
-          <Txt v="small" color={C.textDim} style={{ marginTop: 4 }}>
-            {meta.round.hours ? `${meta.round.hours} hours` : `${meta.round.laps} laps`} · {meta.track.lengthKm.toFixed(1)} km · {meta.track.kind}
-          </Txt>
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: S.md, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Pill
-              label={fc.wetStart ? 'Wet start' : fc.rainLater ? 'Rain threat' : 'Dry'}
-              icon={fc.wetStart ? 'rain' : fc.rainLater ? 'cloud' : 'sun'}
-              color={fc.wetStart || fc.rainLater ? C.blue : C.surface3}
-            />
-            <Pill label={`Overtaking ${meta.track.overtaking > 0.6 ? 'easy' : meta.track.overtaking > 0.35 ? 'medium' : 'hard'}`} color={C.surface3} />
-            {meta.reasons.map((r) => (
-              <Pill key={r} label={r} color={r.startsWith('Title') ? C.gold : r === 'Crown jewel' ? C.purple : C.surface3} />
-            ))}
-          </View>
-        </Card>
-      </Animated.View>
-      <SectionTitle title="Qualifying" />
-      <Card>
-        <Txt v="body" color={C.textDim}>
-          Final run of qualifying. Track is {fc.wetStart ? 'wet and treacherous' : 'rubbered in and fast'}. How hard do you push?
-        </Txt>
-        <View style={{ gap: S.sm, marginTop: S.md }}>
-          <Btn label="Push to the limit" icon="fire" onPress={() => onQuali('push')} sub="Faster lap · 20% chance of a mistake" />
-          <Btn label="Banker lap" icon="shield" kind="secondary" onPress={() => onQuali('banker')} sub="Clean and safe" />
-        </View>
-      </Card>
-    </Screen>
-  );
-}
-
-function GridView({ prep, onStart }: { prep: PreparedRace; onStart: () => void }) {
-  const e = prep.engine;
-  const p = e.playerIndex;
-  const pos = e.cfg.grid.indexOf(p) + 1;
-  return (
-    <Screen
-      header={<Header title="Starting grid" sub={prep.meta.round.name} back={false} />}
-      footer={<Btn label={prep.meta.track.kind === 'oval' ? 'Green flag' : 'Lights out'} icon="flag" onPress={onStart} />}
-    >
-      <Animated.View entering={ZoomIn.springify().damping(14)} style={{ alignItems: 'center', marginVertical: S.lg }}>
-        {p >= 0 ? (
-          <>
-            <PosBadge pos={pos} size={72} />
-            <Txt v="title" style={{ marginTop: S.md }}>
-              {pos === 1 ? 'Pole position!' : `You start P${pos}`}
-            </Txt>
-            {prep.qualiMistake ? (
-              <Txt v="body" color={C.red} style={{ marginTop: 4 }}>
-                You pushed too hard and ran wide on the final lap.
-              </Txt>
-            ) : null}
-          </>
-        ) : (
-          <Txt v="h1">You are watching from the garage</Txt>
-        )}
-      </Animated.View>
-      <Card padded={false} style={{ padding: 10 }}>
-        {e.cfg.grid.map((idx, k) => {
-          const en = e.entries[idx];
-          const me = idx === p;
-          return (
-            <View
-              key={en.driverId}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 10,
-                paddingVertical: 6,
-                paddingHorizontal: 8,
-                marginLeft: k % 2 ? 36 : 0,
-                borderRadius: 8,
-                backgroundColor: me ? withAlpha(C.red, 0.2) : 'transparent',
-              }}
-            >
-              <Txt v="num" style={{ width: 26 }} color={k < 3 ? C.gold : C.text}>
-                {k + 1}
-              </Txt>
-              <View style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: en.colors.primary }} />
-              <Txt v="bodyStrong" style={{ flex: 1 }} numberOfLines={1}>
-                {en.name}
-              </Txt>
-              <Txt v="small" color={C.textMute}>
-                #{en.number}
-              </Txt>
-            </View>
-          );
-        })}
-      </Card>
-    </Screen>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Live broadcast
 // ---------------------------------------------------------------------------
 
@@ -219,7 +110,12 @@ function Live({
   const [highlight, setHighlight] = useState<HighlightSpec | null>(null);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(defaultSpeed);
-  const [toast, setToast] = useState<string | null>(null);
+  const [timing, setTiming] = useState(false);
+  const [zone, setZone] = useState<{ w: number; h: number } | null>(null);
+  const onZone = (e: LayoutChangeEvent) => {
+    const { width: w, height: h } = e.nativeEvent.layout;
+    if (!zone || Math.abs(zone.w - w) > 1 || Math.abs(zone.h - h) > 1) setZone({ w, h });
+  };
   const [confirmLeave, setConfirmLeave] = useState(false);
   // Android back mid-race asks first instead of silently abandoning the race.
   useEffect(() => {
@@ -277,8 +173,6 @@ function Live({
   const onStepDone = useCallback(
     (snap: Snapshot) => {
       setSnapIdx(snap.step);
-      const mine = snap.events.filter((ev) => ev.player);
-      if (mine.length) setToast(mine[mine.length - 1].text);
       // Surprise player incidents (not from a decision) get a highlight.
       const crash = snap.events.find((ev) => ev.player && (ev.kind === 'crash' || ev.kind === 'mech') && ev.a === playerIdx);
       if (crash) {
@@ -334,12 +228,6 @@ function Live({
     const t = setTimeout(() => tickRef.current(), 500);
     return () => clearTimeout(t);
   }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const setPause = (v: boolean) => {
     pausedRef.current = v;
@@ -421,146 +309,60 @@ function Live({
   const snap = eng.snapshots[snapIdx] ?? eng.snapshots[0];
   const prev = eng.snapshots[Math.max(0, snapIdx - 1)];
   const pos = playerIdx >= 0 ? snap.order.indexOf(playerIdx) + 1 : 0;
-  const lapLabel = prep.meta.round.hours
-    ? `HOUR ${Math.max(1, Math.ceil(((prep.meta.round.hours ?? 1) * snap.step) / eng.steps))}/${prep.meta.round.hours}`
-    : `LAP ${Math.max(1, snap.lap)}/${prep.meta.round.laps}`;
-  const mapH = Math.min(360, height * 0.42);
-  const ahead = pos > 1 ? snap.order[pos - 2] : -1;
-  const behind = pos > 0 && pos < snap.order.length ? snap.order[pos] : -1;
-  const events = eng.events
-    .filter((ev) => ev.step <= snapIdx)
-    .slice(-3)
-    .reverse();
+  const hours = prep.meta.round.hours;
+  const lapNow = hours ? Math.max(1, Math.ceil((hours * snap.step) / eng.steps)) : Math.max(1, snap.lap);
+  const lapTotal = hours ?? prep.meta.round.laps;
+  const events = eng.events.filter((ev) => ev.step <= snapIdx);
+  const caution = s.discipline === 'american' ? 'Caution' : 'Safety car';
+  const trackW = zone ? zone.w : width;
+  const trackH = zone ? zone.h : 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Backdrop tint={s.color} />
-      <View style={{ paddingTop: insets.top + 4, paddingHorizontal: S.md, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <IconBtn icon="close" size={36} onPress={() => setConfirmLeave(true)} />
-        <View style={{ flex: 1 }}>
-          <Txt v="h2" numberOfLines={1}>
-            {lapLabel}
-          </Txt>
-          <Txt v="label" color={C.textDim} numberOfLines={1}>
-            {prep.meta.round.name}
-          </Txt>
-        </View>
-        {snap.flag === 'sc' ? <Pill label={s.discipline === 'american' ? 'Caution' : 'Safety car'} color={C.gold} /> : <Pill label="Green" color={C.green} />}
-        <Icon name={snap.wet >= 0.3 ? 'rain' : snap.wet > 0.1 ? 'cloud' : 'sun'} color={snap.wet >= 0.3 ? C.blue : C.gold} size={22} />
-      </View>
-
-      <View style={{ alignItems: 'center', marginTop: 4 }}>
-        <TrackBroadcast
-          trackId={prep.meta.track.id}
-          width={width}
-          height={mapH}
-          entries={eng.entries}
-          prog={prog}
-          seg={seg}
-          playerIndex={playerIdx}
-          rivalIndex={rival}
-          pitted={snap.pitted}
-          accent={s.color}
+      <Backdrop tint={s.color} intensity={0.6} />
+      <View style={{ paddingTop: insets.top + 6, paddingBottom: 6 }}>
+        <RaceTopBar
+          pos={pos}
+          out={playerIdx >= 0 && snap.status[playerIdx] === 'out'}
+          lapNow={lapNow}
+          lapTotal={lapTotal}
+          unit={hours ? 'HOUR' : 'LAP'}
+          title={`${prep.meta.round.name} · ${s.short}`}
+          flag={snap.flag}
+          wet={snap.wet}
+          cautionLabel={caution}
+          onClose={() => setConfirmLeave(true)}
         />
-        {snap.wet >= 0.3 ? <RainOverlay width={width} height={mapH} /> : null}
       </View>
 
-      {playerIdx >= 0 ? (
-        <View style={{ flexDirection: 'row', marginHorizontal: S.md, gap: 8 }}>
-          <View style={{ backgroundColor: C.red, borderRadius: R.sm, paddingHorizontal: 12, justifyContent: 'center', transform: [{ skewX: '-8deg' }] }}>
-            <Txt v="numBig" color="#FFFFFF" style={{ fontSize: 30, lineHeight: 34 }}>
-              {snap.status[playerIdx] === 'out' ? 'OUT' : `P${pos}`}
-            </Txt>
-          </View>
-          <View style={{ flex: 1, backgroundColor: C.surface, borderRadius: R.sm, padding: 8, borderWidth: 1, borderColor: C.line, gap: 2 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Txt v="small" color={C.textDim}>
-                {ahead >= 0 ? `Ahead ${eng.entries[ahead].code}` : 'Leading'}
-              </Txt>
-              <Txt v="num" style={{ fontSize: 14 }}>
-                {ahead >= 0 && snap.status[playerIdx] === 'run' ? `${(snap.gaps[playerIdx] - snap.gaps[ahead]).toFixed(1)}s` : '—'}
-              </Txt>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Txt v="small" color={C.textDim}>
-                {behind >= 0 && snap.status[behind] === 'run' ? `Behind ${eng.entries[behind].code}` : 'Behind'}
-              </Txt>
-              <Txt v="num" style={{ fontSize: 14 }}>
-                {behind >= 0 && snap.status[behind] === 'run' && snap.status[playerIdx] === 'run' ? `${(snap.gaps[behind] - snap.gaps[playerIdx]).toFixed(1)}s` : '—'}
-              </Txt>
-            </View>
-          </View>
-          <View style={{ backgroundColor: C.surface, borderRadius: R.sm, padding: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }}>
-            <TyreDot c={snap.tyres[playerIdx]} size={20} />
-            <Txt v="small" color={C.textDim} style={{ fontSize: 10.5, marginTop: 2 }}>
-              {Math.round(eng.cars[playerIdx].tyreAge)} laps
-            </Txt>
-          </View>
-        </View>
-      ) : null}
-
-      <ScrollView style={{ flex: 1, marginTop: 8 }} contentContainerStyle={{ paddingHorizontal: S.md, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
-        <Tower engine={eng} snap={snap} prev={prev} playerIndex={playerIdx} rows={10} />
-        <View style={{ marginTop: 8, gap: 4 }}>
-          {events.map((ev, k) => (
-            <Animated.View key={`${ev.step}-${k}-${ev.text}`} entering={FadeIn}>
-              <Txt v="small" color={ev.player ? C.gold : C.textDim} numberOfLines={1}>
-                {prep.meta.round.hours ? '' : `L${eng.displayLap(ev.step)} · `}
-                {ev.text}
-              </Txt>
-            </Animated.View>
-          ))}
-        </View>
-      </ScrollView>
-
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
-          paddingHorizontal: S.md,
-          paddingTop: 8,
-          paddingBottom: insets.bottom + 10,
-          borderTopWidth: 1,
-          borderColor: C.line,
-          backgroundColor: withAlpha(C.bg, 0.9),
-        }}
-      >
-        <IconBtn icon={paused ? 'play' : 'pause'} size={44} onPress={() => setPause(!paused)} bg={paused ? C.red : C.surface2} />
-        {[1, 2, 4, 12].map((v) => (
-          <Press key={v} onPress={() => changeSpeed(v)} feedback="tick">
-            <View
-              style={{
-                paddingHorizontal: 10,
-                height: 36,
-                borderRadius: 10,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: speed === v ? C.surface3 : C.surface,
-                borderWidth: 1,
-                borderColor: speed === v ? C.lineStrong : C.line,
-              }}
-            >
-              <Txt v="h3" color={speed === v ? C.text : C.textMute} style={{ fontSize: 14 }}>
-                {v === 12 ? 'x12' : `x${v}`}
-              </Txt>
-            </View>
-          </Press>
-        ))}
-        <View style={{ flex: 1 }} />
-        <IconBtn icon="skip" size={40} onPress={() => skipToMoment(false)} />
-        <IconBtn icon="ff" size={40} onPress={() => skipToMoment(true)} />
+      {/* The track is the main element: it takes every pixel the HUD leaves free. */}
+      <View onLayout={onZone} style={{ flex: 1, minHeight: 180 }}>
+        {trackH > 0 ? (
+          <>
+            <TrackBroadcast
+              trackId={prep.meta.track.id}
+              width={trackW}
+              height={trackH}
+              entries={eng.entries}
+              prog={prog}
+              seg={seg}
+              playerIndex={playerIdx}
+              rivalIndex={rival}
+              pitted={snap.pitted}
+              accent={s.color}
+            />
+            {snap.wet >= 0.3 ? <RainOverlay width={trackW} height={trackH} /> : null}
+          </>
+        ) : null}
       </View>
+      <ProgressRail value={snap.step / eng.steps} />
 
-      {toast && !moment && !highlight ? (
-        <Animated.View entering={FadeInDown} style={{ pointerEvents: 'none', position: 'absolute', top: insets.top + 56 + mapH - 40, left: S.md, right: S.md, alignItems: 'center' }}>
-          <View style={{ backgroundColor: withAlpha('#000000', 0.8), borderRadius: R.pill, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: withAlpha(C.gold, 0.5) }}>
-            <Txt v="small" color={C.gold} style={{ fontFamily: F.bodySemi }} numberOfLines={1}>
-              {toast}
-            </Txt>
-          </View>
-        </Animated.View>
-      ) : null}
+      {playerIdx >= 0 ? <Telemetry eng={eng} snap={snap} prev={prev} player={playerIdx} /> : null}
+      <BattleBoard eng={eng} snap={snap} prev={prev} player={playerIdx} onFull={() => setTiming(true)} rows={height < 760 ? 4 : 5} />
+      <View style={{ borderTopWidth: 1, borderColor: C.line, backgroundColor: withAlpha(C.surface, 0.6) }}>
+        <EventStrip events={events} lapOf={hours ? undefined : (st) => eng.displayLap(st)} />
+      </View>
+      <ControlDock paused={paused} speed={speed} onPause={() => setPause(!paused)} onSpeed={changeSpeed} onSkip={() => skipToMoment(false)} onEnd={() => skipToMoment(true)} bottom={insets.bottom} />
 
       {moment ? <MomentSheet key={`${moment.type}${moment.step}`} moment={moment} resolution={resolution} onChoose={choose} onContinue={continueAfterMoment} /> : null}
 
@@ -576,28 +378,26 @@ function Live({
         />
       ) : null}
 
-      <Modal visible={confirmLeave} transparent animationType="fade" onRequestClose={() => setConfirmLeave(false)}>
-        <ModalScrim bg="rgba(2,4,10,0.85)">
-          <Card>
-            <Txt v="h1">Skip to the result?</Txt>
-            <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
-              The rest of the race will be simulated with your default instincts.
-            </Txt>
-            <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
-              <Btn label="Keep watching" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmLeave(false)} />
-              <Btn
-                label="Skip"
-                small
-                style={{ flex: 1 }}
-                onPress={() => {
-                  setConfirmLeave(false);
-                  skipToMoment(true);
-                }}
-              />
-            </View>
-          </Card>
-        </ModalScrim>
-      </Modal>
+      <FullTiming visible={timing} onClose={() => setTiming(false)} eng={eng} snap={snap} prev={prev} player={playerIdx} title={`${hours ? 'Hour' : 'Lap'} ${lapNow}/${lapTotal}`} />
+
+      <SheetModal visible={confirmLeave} onClose={() => setConfirmLeave(false)}>
+        <Txt v="h1">Skip to the result?</Txt>
+        <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+          The rest of the race is simulated with your default instincts.
+        </Txt>
+        <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
+          <Btn label="Keep watching" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmLeave(false)} />
+          <Btn
+            label="Skip"
+            small
+            style={{ flex: 1 }}
+            onPress={() => {
+              setConfirmLeave(false);
+              skipToMoment(true);
+            }}
+          />
+        </View>
+      </SheetModal>
     </View>
   );
 }
@@ -613,87 +413,5 @@ function RainOverlay({ width, height }: { width: number; height: number }) {
         <View key={i} style={{ position: 'absolute', left: s.x, top: s.y, width: 1.2, height: s.l, backgroundColor: '#BFE3FF', transform: [{ rotate: '14deg' }] }} />
       ))}
     </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Results
-// ---------------------------------------------------------------------------
-
-function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOutcome }) {
-  const world = useWorld()!;
-  const e = prep.engine;
-  const cls = e.classification();
-  const r = outcome.summary;
-  const s = seriesDef(prep.meta.seriesId);
-  const points = world.season.series[prep.meta.seriesId]?.results.find((x) => x.round === prep.meta.roundIndex)?.points ?? {};
-  const hls = world.active?.highlights.filter((h) => outcome.highlightIds.includes(h.id)) ?? [];
-  const [reel, setReel] = useState<number | null>(null);
-  return (
-    <Screen
-      tint={r.pos === 1 ? C.gold : s.color}
-      header={<Header title="Race result" sub={prep.meta.round.name} back={false} />}
-      footer={<Btn label="Continue" icon="chevron" onPress={() => router.replace('/career')} />}
-    >
-      <Animated.View entering={ZoomIn.springify().damping(14)} style={{ alignItems: 'center', marginVertical: S.md }}>
-        <PosBadge pos={r.pos} dnf={r.pos === 0} size={76} />
-        <Txt v="title" center style={{ marginTop: S.md }}>
-          {r.headline}
-        </Txt>
-        <Txt v="small" color={C.textDim} style={{ marginTop: 4 }}>
-          Started P{r.grid} · +{r.points} pts · Championship P{outcome.standingsPos}
-          {r.fastestLap ? ' · Fastest lap' : ''}
-        </Txt>
-      </Animated.View>
-      {outcome.newMoments.length ? (
-        <View style={{ gap: 6 }}>
-          {outcome.newMoments.map((m) => (
-            <Card key={m.id} accent={C.gold} style={{ padding: 12 }}>
-              <Txt v="h3" color={C.gold}>
-                {m.title}
-              </Txt>
-              <Txt v="small" color={C.textDim}>
-                {m.text}
-              </Txt>
-            </Card>
-          ))}
-        </View>
-      ) : null}
-      {hls.length ? (
-        <>
-          <SectionTitle title="Highlights" right={hls.length > 1 ? <PlayAllChip onPress={() => setReel(0)} /> : undefined} />
-          <HighlightRows items={hls} meta="sub" onPlay={(i) => setReel(i)} />
-        </>
-      ) : null}
-      <SectionTitle title="Classification" />
-      <Card padded={false} style={{ padding: 8 }}>
-        {cls.order.map((i, k) => {
-          const en = e.entries[i];
-          const out = e.cars[i].status === 'out';
-          const me = en.isPlayer;
-          return (
-            <View
-              key={en.driverId}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingHorizontal: 6, borderRadius: 8, backgroundColor: me ? withAlpha(C.red, 0.18) : 'transparent' }}
-            >
-              <Txt v="num" style={{ width: 28 }} color={out ? C.red : k < 3 ? C.gold : C.text}>
-                {out ? 'DNF' : k + 1}
-              </Txt>
-              <View style={{ width: 4, height: 18, borderRadius: 2, backgroundColor: en.colors.primary }} />
-              <Txt v="bodyStrong" style={{ flex: 1, fontSize: 14 }} numberOfLines={1}>
-                {en.name}
-              </Txt>
-              <Txt v="small" color={C.textDim} style={{ width: 70, textAlign: 'right' }}>
-                {out ? (e.cars[i].outReason === 'mech' ? 'Mechanical' : 'Accident') : gapLabel(e, e.snapshots[e.snapshots.length - 1], i, false)}
-              </Txt>
-              <Txt v="num" style={{ width: 34, textAlign: 'right' }}>
-                {points[en.driverId] ? `+${points[en.driverId]}` : ''}
-              </Txt>
-            </View>
-          );
-        })}
-      </Card>
-      {reel !== null ? <HighlightReel specs={hls.map((h) => h.spec)} start={reel} onClose={() => setReel(null)} /> : null}
-    </Screen>
   );
 }

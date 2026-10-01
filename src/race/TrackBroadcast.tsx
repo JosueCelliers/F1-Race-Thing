@@ -68,7 +68,7 @@ function CarDot({ i, entry, prog, seg, samples, count, scale, tx, ty, size, high
     };
   });
   const bg = entry.colors.primary;
-  const ring = highlight === 'player' ? '#FFFFFF' : highlight === 'rival' ? C.red : entry.colors.secondary;
+  const ring = highlight === 'player' ? '#FFFFFF' : highlight === 'rival' ? C.amber : entry.colors.secondary;
   return (
     <Animated.View
       style={[
@@ -85,7 +85,7 @@ function CarDot({ i, entry, prog, seg, samples, count, scale, tx, ty, size, high
           borderColor: ring,
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: highlight === 'player' ? '0px 1px 8px rgba(255, 255, 255, 0.9)' : '0px 1px 3px rgba(0, 0, 0, 0.5)',
+          boxShadow: highlight === 'player' ? '0px 0px 0px 3px rgba(255, 45, 85, 0.85)' : '0px 1px 3px rgba(0, 0, 0, 0.5)',
         },
         style,
       ]}
@@ -94,13 +94,13 @@ function CarDot({ i, entry, prog, seg, samples, count, scale, tx, ty, size, high
         {entry.number}
       </Txt>
       {highlight === 'player' ? (
-        <View style={{ position: 'absolute', top: -15, backgroundColor: '#FFFFFF', borderRadius: 4, paddingHorizontal: 4 }}>
-          <Txt v="label" color="#0B0F19" style={{ fontSize: 8.5, lineHeight: 11, letterSpacing: 0.6 }}>
+        <View style={{ position: 'absolute', top: -18, backgroundColor: C.red, borderRadius: 2, paddingHorizontal: 5, transform: [{ skewX: '-11deg' }] }}>
+          <Txt v="label" color="#FFFFFF" style={{ fontSize: 9, lineHeight: 13, letterSpacing: 0.8, transform: [{ skewX: '11deg' }] }}>
             YOU
           </Txt>
         </View>
       ) : pit ? (
-        <View style={{ position: 'absolute', top: -13, backgroundColor: C.gold, borderRadius: 3, paddingHorizontal: 3 }}>
+        <View style={{ position: 'absolute', top: -13, backgroundColor: C.amber, borderRadius: 2, paddingHorizontal: 3 }}>
           <Txt v="label" color="#0B0F19" style={{ fontSize: 7.5, lineHeight: 10 }}>
             PIT
           </Txt>

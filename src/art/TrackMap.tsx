@@ -54,17 +54,18 @@ export const TrackMap = React.memo(function TrackMap({ trackId, width, height, v
     }
     return out;
   }, [geom, sectors]);
-  const sectorColors = ['#FF3B5C', '#3BA7FF', '#FFC940'];
+  // Sectors read as one restrained family: signal red, off-white, steel.
+  const sectorColors = [C.red, '#E9E4DA', '#8C94A4'];
   return (
     <Svg width={width} height={height}>
       <G transform={`translate(${tf.tx} ${tf.ty}) scale(${s})`}>
-        {broadcast ? <Path d={geom.path} stroke={color ?? C.red} strokeOpacity={0.12} strokeWidth={outer * 2.2} fill="none" strokeLinejoin="round" /> : null}
-        <Path d={geom.path} stroke={broadcast ? '#0E1422' : '#0B101B'} strokeWidth={outer} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-        <Path d={geom.path} stroke={broadcast ? '#2A3550' : '#3A4868'} strokeWidth={mid} fill="none" strokeLinejoin="round" />
+        {/* Run-off edge, asphalt, then a fine racing line: no glow. */}
+        <Path d={geom.path} stroke={broadcast ? '#3A4457' : '#0B101B'} strokeWidth={outer} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+        <Path d={geom.path} stroke={broadcast ? '#1A2130' : '#3A4868'} strokeWidth={broadcast ? outer - 2.6 / s : mid} fill="none" strokeLinejoin="round" />
         {sectorPaths.map((d, i) => (
-          <Path key={i} d={d} stroke={sectorColors[i]} strokeOpacity={0.5} strokeWidth={inner * 1.4} fill="none" strokeLinejoin="round" />
+          <Path key={i} d={d} stroke={sectorColors[i]} strokeOpacity={0.75} strokeWidth={inner * 1.3} fill="none" strokeLinejoin="round" />
         ))}
-        {!sectors ? <Path d={geom.path} stroke={color ?? (broadcast ? '#8C9AB8' : '#E8ECF4')} strokeOpacity={broadcast ? 0.55 : 0.95} strokeWidth={inner} fill="none" strokeLinejoin="round" /> : null}
+        {!sectors ? <Path d={geom.path} stroke={color ?? (broadcast ? '#F2EEE6' : '#E8ECF4')} strokeOpacity={broadcast ? 0.3 : 0.95} strokeWidth={inner} fill="none" strokeLinejoin="round" /> : null}
         <Line
           x1={start.x + Math.cos(perp) * half}
           y1={start.y + Math.sin(perp) * half}
