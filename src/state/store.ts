@@ -23,7 +23,7 @@ interface GameStore {
   rev: number;
   settings: Settings;
   archive: Record<string, CareerRecord>;
-  load: () => void;
+  load: () => Promise<void>;
   ensureWorld: () => World;
   resetUniverse: () => void;
   mutate: (fn: (w: World) => void) => void;
@@ -39,14 +39,14 @@ export const useGame = create<GameStore>((set, get) => ({
   rev: 0,
   settings: DEFAULT_SETTINGS,
   archive: {},
-  load: () => {
-    const settings = { ...DEFAULT_SETTINGS, ...(persist.loadSettings<Settings>() ?? {}) };
+  load: async () => {
+    const settings = { ...DEFAULT_SETTINGS, ...((await persist.loadSettings<Settings>()) ?? {}) };
     setHapticsEnabled(settings.haptics);
-    let world = persist.loadWorld<World>();
+    let world = await persist.loadWorld<World>();
     if (world && world.version !== WORLD_VERSION) world = null;
     const archive: Record<string, CareerRecord> = {};
-    for (const id of persist.listCareers()) {
-      const rec = persist.loadCareer<CareerRecord>(id);
+    for (const id of await persist.listCareers()) {
+      const rec = await persist.loadCareer<CareerRecord>(id);
       if (rec) archive[id] = rec;
     }
     set({ ready: true, world, settings, archive });
@@ -61,9 +61,9 @@ export const useGame = create<GameStore>((set, get) => ({
     return w;
   },
   resetUniverse: () => {
-    persist.wipe();
-    persist.saveSettings(get().settings);
+    const settings = get().settings;
     set({ world: null, archive: {}, rev: get().rev + 1 });
+    void persist.wipe().then(() => persist.saveSettings(settings));
   },
   mutate: (fn) => {
     const w = get().world;

@@ -43,28 +43,32 @@ function writeJson(dir: Directory, name: string, data: unknown) {
   tmp.moveSync(new File(dir, name), { overwrite: true });
 }
 
+/** Same async interface as the web store; file work happens synchronously inside. */
 export const persist = {
-  loadWorld<T>(): T | null {
+  loadWorld<T>(): Promise<T | null> {
     ensureDirs();
-    return readJson<T>(root(), 'world.json');
+    return Promise.resolve(readJson<T>(root(), 'world.json'));
   },
-  saveWorld(data: unknown) {
+  saveWorld(data: unknown): Promise<void> {
     writeJson(root(), 'world.json', data);
+    return Promise.resolve();
   },
-  loadSettings<T>(): T | null {
+  loadSettings<T>(): Promise<T | null> {
     ensureDirs();
-    return readJson<T>(root(), 'settings.json');
+    return Promise.resolve(readJson<T>(root(), 'settings.json'));
   },
-  saveSettings(data: unknown) {
+  saveSettings(data: unknown): Promise<void> {
     writeJson(root(), 'settings.json', data);
+    return Promise.resolve();
   },
-  loadCareer<T>(id: string): T | null {
-    return readJson<T>(careersDir(), `${id}.json`);
+  loadCareer<T>(id: string): Promise<T | null> {
+    return Promise.resolve(readJson<T>(careersDir(), `${id}.json`));
   },
-  saveCareer(id: string, data: unknown) {
+  saveCareer(id: string, data: unknown): Promise<void> {
     writeJson(careersDir(), `${id}.json`, data);
+    return Promise.resolve();
   },
-  listCareers(): string[] {
+  listCareers(): Promise<string[]> {
     ensureDirs();
     try {
       const ids = new Set<string>();
@@ -74,17 +78,18 @@ export const persist = {
         const m = /^(.+)\.json(\.tmp|\.bak)?$/.exec(x.name);
         if (m) ids.add(m[1]);
       }
-      return [...ids];
+      return Promise.resolve([...ids]);
     } catch {
-      return [];
+      return Promise.resolve([]);
     }
   },
-  wipe() {
+  wipe(): Promise<void> {
     try {
       const r = root();
       if (r.exists) r.delete();
     } catch {
       // ignore
     }
+    return Promise.resolve();
   },
 };

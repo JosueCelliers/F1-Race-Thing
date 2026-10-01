@@ -63,47 +63,47 @@ const { persist } = await import('../persist');
 const files = fsMock.__files;
 
 describe('native persistence', () => {
-  beforeEach(() => {
-    persist.wipe();
+  beforeEach(async () => {
+    await persist.wipe();
     files.clear();
   });
 
-  it('round-trips the world and keeps the previous save as a backup', () => {
-    persist.saveWorld({ year: 2026 });
-    persist.saveWorld({ year: 2027 });
-    expect(persist.loadWorld<{ year: number }>()?.year).toBe(2027);
+  it('round-trips the world and keeps the previous save as a backup', async () => {
+    await persist.saveWorld({ year: 2026 });
+    await persist.saveWorld({ year: 2027 });
+    expect((await persist.loadWorld<{ year: number }>())?.year).toBe(2027);
     expect(JSON.parse(files.get('doc/chequered/world.json.bak')!).year).toBe(2026);
     expect(files.has('doc/chequered/world.json.tmp')).toBe(false);
   });
 
-  it('survives a crash in the middle of writing', () => {
-    persist.saveWorld({ year: 2026 });
+  it('survives a crash in the middle of writing', async () => {
+    await persist.saveWorld({ year: 2026 });
     // The app died while writing the next save: a truncated temp file is left behind.
     files.set('doc/chequered/world.json.tmp', '{"year": 20');
-    expect(persist.loadWorld<{ year: number }>()?.year).toBe(2026);
+    expect((await persist.loadWorld<{ year: number }>())?.year).toBe(2026);
   });
 
-  it('survives a crash between the two renames', () => {
-    persist.saveWorld({ year: 2026 });
-    persist.saveWorld({ year: 2027 });
+  it('survives a crash between the two renames', async () => {
+    await persist.saveWorld({ year: 2026 });
+    await persist.saveWorld({ year: 2027 });
     // Old file already moved to .bak, new one still sitting in .tmp.
     files.set('doc/chequered/world.json.tmp', files.get('doc/chequered/world.json')!);
     files.delete('doc/chequered/world.json');
-    expect(persist.loadWorld<{ year: number }>()?.year).toBe(2027);
+    expect((await persist.loadWorld<{ year: number }>())?.year).toBe(2027);
   });
 
-  it('falls back to the backup when the main file is corrupt', () => {
-    persist.saveWorld({ year: 2026 });
-    persist.saveWorld({ year: 2027 });
+  it('falls back to the backup when the main file is corrupt', async () => {
+    await persist.saveWorld({ year: 2026 });
+    await persist.saveWorld({ year: 2027 });
     files.set('doc/chequered/world.json', 'garbage');
-    expect(persist.loadWorld<{ year: number }>()?.year).toBe(2026);
+    expect((await persist.loadWorld<{ year: number }>())?.year).toBe(2026);
   });
 
-  it('lists each archived career once', () => {
-    persist.saveCareer('c1', { id: 'c1' });
-    persist.saveCareer('c1', { id: 'c1', v: 2 });
-    persist.saveCareer('c2', { id: 'c2' });
-    expect(persist.listCareers().sort()).toEqual(['c1', 'c2']);
-    expect(persist.loadCareer<{ v: number }>('c1')?.v).toBe(2);
+  it('lists each archived career once', async () => {
+    await persist.saveCareer('c1', { id: 'c1' });
+    await persist.saveCareer('c1', { id: 'c1', v: 2 });
+    await persist.saveCareer('c2', { id: 'c2' });
+    expect((await persist.listCareers()).sort()).toEqual(['c1', 'c2']);
+    expect((await persist.loadCareer<{ v: number }>('c1'))?.v).toBe(2);
   });
 });
