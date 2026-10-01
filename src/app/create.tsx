@@ -1,50 +1,41 @@
+/**
+ * Twelve wheels, one driver. The wheel fills the phone's width, the answer
+ * locks into a plate underneath, and SPIN sits where the thumb already is.
+ * After the last wheel the driver file opens.
+ */
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, TextInput, View } from 'react-native';
-import { useScreen } from '../ui/screen';
-import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
-import { Flag } from '../art/Flag';
-import { series as seriesDef } from '../content/series';
-import { family, personality } from '../content/traits';
+import { ActivityIndicator, View, type LayoutChangeEvent } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DriverReveal } from '../creation/Reveal';
+import { PicksStrip, ProgressRail, ResultPlate, StepLockup, wheelAccents } from '../creation/SpinHud';
 import { startCareer } from '../sim/career';
-import { AGGRESSION_LEVELS, buildWheel, pickSlice, POTENTIALS, rollIdentity, rollSkills, WET_LABELS, WHEEL_ORDER, type Identity, type Picks, type WheelDef } from '../sim/creation';
-import { generateLooks, generateName, overall } from '../sim/drivers';
+import { buildWheel, pickSlice, rollIdentity, rollSkills, STAR_BANDS, WHEEL_ORDER, type Identity, type Picks, type WheelDef } from '../sim/creation';
+import { generateLooks, generateName } from '../sim/drivers';
 import { mixSeed, Rng } from '../sim/rng';
 import { useGame } from '../state/store';
-import { DriverCard } from '../ui/DriverCard';
 import { haptic } from '../ui/haptics';
-import { Btn, Card, Header, IconBtn, ModalScrim, Pill, Screen, Txt } from '../ui/kit';
+import { Backdrop, Btn, IconBtn, Txt } from '../ui/kit';
 import { SpinWheel, type SpinRequest } from '../ui/SpinWheel';
-import { C, F, R, S, withAlpha } from '../ui/theme';
+import { C, S } from '../ui/theme';
 
-function PickChip({ label, flag, emoji }: { label: string; flag?: string; emoji?: string }) {
-  return (
-    <Animated.View
-      entering={ZoomIn.springify().damping(14)}
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface2, borderRadius: R.pill, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1, borderColor: C.line }}
-    >
-      {flag ? <Flag id={flag} width={16} /> : emoji ? <Txt v="small">{emoji}</Txt> : null}
-      <Txt v="small" color={C.text} style={{ fontFamily: F.bodySemi }}>
-        {label}
-      </Txt>
-    </Animated.View>
-  );
+/** A new wheel settles in rather than popping (custom layout animations don't run on web). */
+function WheelEnter({ children, style }: { children: React.ReactNode; style?: object }) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.set(withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) }));
+  }, [t]);
+  const st = useAnimatedStyle(() => ({ opacity: t.value, transform: [{ scale: 0.9 + t.value * 0.1 }, { rotate: `${(1 - t.value) * -14}deg` }] }));
+  return <Animated.View style={[style, st]}>{children}</Animated.View>;
 }
-
-const SHORT: Record<string, string> = {
-  pace: 'Pace',
-  racecraft: 'Racecraft',
-  consistency: 'Consistency',
-  wet: 'Wet',
-  age: 'Age',
-};
 
 export default function Create() {
   const world = useGame((s) => s.world);
   const ensureWorld = useGame((s) => s.ensureWorld);
   const mutate = useGame((s) => s.mutate);
   const spinSpeed = useGame((s) => s.settings.spinSpeed);
-  const { width } = useScreen();
+  const insets = useSafeAreaInsets();
   const [seed] = useState(() => Math.floor(Math.random() * 2 ** 31));
   const rng = useRef(new Rng(seed));
   const [step, setStep] = useState(0);
@@ -55,9 +46,9 @@ export default function Create() {
   const [phase, setPhase] = useState<'idle' | 'spinning' | 'result'>('idle');
   const [auto, setAuto] = useState(false);
   const [identity, setIdentity] = useState<Identity | null>(null);
-  const [renaming, setRenaming] = useState(false);
-  const [nameDraft, setNameDraft] = useState({ first: '', last: '' });
+  const [zone, setZone] = useState<{ w: number; h: number } | null>(null);
   const identRng = useRef(new Rng(mixSeed(seed, 'identity')));
+  const total = WHEEL_ORDER.length;
 
   useEffect(() => {
     if (!world) {
@@ -66,11 +57,12 @@ export default function Create() {
     }
   }, [world, ensureWorld]);
 
-  const done = step >= WHEEL_ORDER.length;
+  const done = step >= total;
 
   useEffect(() => {
     if (!world || done) return;
     setWheel(buildWheel(WHEEL_ORDER[step], picks, world, rng.current));
+    setRequest(null);
     setWinner(null);
     setPhase('idle');
     // picks intentionally not a dependency: a wheel is built once per step.
@@ -89,7 +81,7 @@ export default function Create() {
 
   useEffect(() => {
     if (auto && phase === 'idle' && wheel && !done) {
-      const t = setTimeout(spin, 250);
+      const t = setTimeout(spin, 220);
       return () => clearTimeout(t);
     }
   }, [auto, phase, wheel, done, spin]);
@@ -102,12 +94,14 @@ export default function Create() {
       setPicks((p) => ({ ...p, [wheel.id]: slice }));
       setPhase('result');
       haptic.success();
-      setTimeout(() => setStep((s) => s + 1), auto ? 650 : 1500);
+      setTimeout(() => setStep((s) => s + 1), auto ? 600 : 1150);
     },
     [wheel, auto],
   );
 
   const skills = useMemo(() => (done ? rollSkills(picks, new Rng(mixSeed(seed, 'career'))) : null), [done, picks, seed]);
+  const accents = useMemo(() => (wheel ? wheelAccents(wheel) : undefined), [wheel]);
+  const captions = useMemo(() => wheel?.slices.map((sl) => (sl.stars ? STAR_BANDS[sl.stars - 1].join('–') : undefined)), [wheel]);
 
   const start = () => {
     if (!identity || !world) return;
@@ -116,209 +110,115 @@ export default function Create() {
     router.replace('/career');
   };
 
+  const onZone = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (!zone || Math.abs(zone.w - width) > 1 || Math.abs(zone.h - height) > 1) setZone({ w: width, h: height });
+  };
+
   if (!world) {
     return (
-      <Screen scroll={false}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <ActivityIndicator color={C.red} size="large" />
-          <Txt v="h2">Building the universe…</Txt>
-          <Txt v="small" color={C.textDim} center>
-            Simulating the seasons before your driver arrives
-          </Txt>
-        </View>
-      </Screen>
+      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', gap: 14, padding: S.xl }}>
+        <Backdrop tint={C.red} />
+        <ActivityIndicator color={C.red} size="large" />
+        <Txt v="h2">Building the universe…</Txt>
+        <Txt v="small" color={C.textDim} center>
+          Simulating the seasons before your driver arrives
+        </Txt>
+      </View>
     );
   }
 
-  const size = Math.min(width - 36, 360);
-  const current = wheel && winner !== null ? wheel.slices[winner] : null;
-
-  // ---------------------------------------------------------------- Identity
+  // ---------------------------------------------------------------- Reveal
   if (done && identity && skills) {
-    const team = world.teams[String(picks.team?.value)];
-    const s = seriesDef(String(picks.series?.value));
-    const fam = family(String(picks.family?.value));
-    const pers = personality(String(picks.personality?.value));
-    const age = Number(picks.age?.value);
-    const aggr = AGGRESSION_LEVELS.find((a) => a.value === Number(picks.aggression?.value));
-    const pot = POTENTIALS.find((p) => p.value === Number(picks.potential?.value));
-    const parent = identity.parentId ? world.drivers[identity.parentId] : undefined;
-    const reroll = (gender?: 'm' | 'f') => {
-      haptic.tap();
-      const g = gender ?? identity.gender;
-      if (gender && gender !== identity.gender) {
-        const nat = String(picks.nation?.value);
-        const nm = generateName(identRng.current, nat, g, parent?.last);
-        setIdentity({ ...identity, gender: g, first: nm.first, last: nm.last, looks: generateLooks(identRng.current, nat, g) });
-      } else {
-        setIdentity({ ...identity, looks: generateLooks(identRng.current, String(picks.nation?.value), g) });
-      }
-    };
+    const nat = String(picks.nation?.value);
     return (
-      <Screen
-        tint={team?.colors.primary}
-        header={<Header title="Your driver" sub="The wheels have spoken" onBack={() => router.replace('/')} />}
-        footer={<Btn label="Start career" icon="flag" onPress={start} sub={`${team?.name} · ${s.name}`} />}
-      >
-        <Animated.View entering={FadeInDown.duration(500)}>
-          <DriverCard
-            d={{
-              first: identity.first,
-              last: identity.last,
-              nation: String(picks.nation?.value),
-              gender: identity.gender,
-              looks: identity.looks,
-              age,
-              ovr: overall(skills),
-              skills,
-              number: identity.number,
-              teamName: team?.name,
-              seriesName: s.name,
-              tags: [
-                { label: `${fam.emoji} ${fam.label}` },
-                { label: `${pers.emoji} ${pers.label}` },
-                { label: `🔥 ${aggr?.label ?? 'Balanced'}` },
-                { label: `📈 ${pot?.label ?? 'Solid'} potential` },
-              ],
-            }}
-            colors={team?.colors}
-          />
-        </Animated.View>
-        {parent ? (
-          <Card style={{ marginTop: S.md }} accent={C.gold}>
-            <Txt v="label" color={C.gold}>
-              Racing blood
-            </Txt>
-            <Txt v="body" style={{ marginTop: 4 }}>
-              Child of {parent.first} {parent.last}
-              {parent.careerId ? ' — one of your own former drivers.' : ', a former race winner.'}
-            </Txt>
-          </Card>
-        ) : null}
-        <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.md }}>
-          <Btn label="New look" icon="dice" kind="secondary" small onPress={() => reroll()} style={{ flex: 1 }} />
-          <Btn
-            label="Rename"
-            icon="edit"
-            kind="secondary"
-            small
-            onPress={() => {
-              setNameDraft({ first: identity.first, last: identity.last });
-              setRenaming(true);
-            }}
-            style={{ flex: 1 }}
-          />
-          <IconBtn icon="swap" size={48} onPress={() => reroll(identity.gender === 'm' ? 'f' : 'm')} />
-        </View>
-        <Card style={{ marginTop: S.md }}>
-          <Txt v="label" color={C.textDim}>
-            Wet weather · {WET_LABELS[Number(picks.wet?.value ?? 3) - 1]}
-          </Txt>
-          <Txt v="small" color={C.textDim} style={{ marginTop: 6 }}>
-            {pers.description}
-          </Txt>
-          <Txt v="small" color={C.textDim} style={{ marginTop: 6 }}>
-            {fam.description}
-          </Txt>
-        </Card>
-        <Modal visible={renaming} transparent animationType="fade" onRequestClose={() => setRenaming(false)}>
-          <ModalScrim bg="rgba(0,0,0,0.7)">
-            <Card>
-              <Txt v="h1">Rename driver</Txt>
-              {(['first', 'last'] as const).map((k) => (
-                <TextInput
-                  key={k}
-                  value={nameDraft[k]}
-                  onChangeText={(v) => setNameDraft((d) => ({ ...d, [k]: v.slice(0, 20) }))}
-                  placeholder={k === 'first' ? 'First name' : 'Last name'}
-                  placeholderTextColor={C.textMute}
-                  style={{ marginTop: 12, backgroundColor: C.surface2, color: C.text, borderRadius: R.sm, padding: 12, fontFamily: F.bodySemi, fontSize: 16 }}
-                />
-              ))}
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
-                <Btn label="Cancel" kind="ghost" small onPress={() => setRenaming(false)} style={{ flex: 1 }} />
-                <Btn
-                  label="Save"
-                  small
-                  onPress={() => {
-                    const first = nameDraft.first.trim() || identity.first;
-                    const last = nameDraft.last.trim() || identity.last;
-                    setIdentity({ ...identity, first, last });
-                    setRenaming(false);
-                  }}
-                  style={{ flex: 1 }}
-                />
-              </View>
-            </Card>
-          </ModalScrim>
-        </Modal>
-      </Screen>
+      <DriverReveal
+        world={world}
+        picks={picks}
+        identity={identity}
+        skills={skills}
+        onStart={start}
+        onBack={() => router.replace('/')}
+        onNewLook={() => {
+          haptic.tap();
+          setIdentity({ ...identity, looks: generateLooks(identRng.current, nat, identity.gender) });
+        }}
+        onSwap={() => {
+          haptic.tap();
+          const g = identity.gender === 'm' ? 'f' : 'm';
+          const parent = identity.parentId ? world.drivers[identity.parentId] : undefined;
+          const nm = generateName(identRng.current, nat, g, parent?.last);
+          setIdentity({ ...identity, gender: g, first: nm.first, last: nm.last, looks: generateLooks(identRng.current, nat, g) });
+        }}
+        onRename={(first, last) => setIdentity({ ...identity, first, last })}
+      />
     );
   }
 
   // ---------------------------------------------------------------- Wheels
-  const chips = WHEEL_ORDER.filter((w) => picks[w]).map((w) => {
-    const p = picks[w]!;
-    if (w === 'nation') return { key: w, label: p.label, flag: String(p.value) };
-    if (p.stars) return { key: w, label: `${SHORT[w]} ${'★'.repeat(p.stars)}` };
-    if (w === 'age') return { key: w, label: `Age ${p.label}`, emoji: '🎂' };
-    if (w === 'wet') return { key: w, label: `Wet ${'★'.repeat(Number(p.value))}` };
-    return { key: w, label: p.label, emoji: p.emoji };
-  });
+  // The wheel takes the whole free zone; the pointer overhangs its top by ~3%.
+  const size = zone ? Math.floor(Math.min(zone.w, zone.h / 1.04, 560)) : 0;
+  const current = wheel && winner !== null ? wheel.slices[winner] : null;
 
   return (
-    <Screen
-      scroll
-      header={
-        <Header
-          title="Spin your driver"
-          sub={`Wheel ${Math.min(step + 1, WHEEL_ORDER.length)} of ${WHEEL_ORDER.length}`}
-          onBack={() => router.replace('/')}
-          right={<IconBtn icon="ff" onPress={() => setAuto((a) => !a)} bg={auto ? C.red : C.surface2} />}
-        />
-      }
-    >
-      <View style={{ height: 4, backgroundColor: C.surface2, borderRadius: 2, overflow: 'hidden', marginBottom: S.md }}>
-        <View style={{ width: `${(step / WHEEL_ORDER.length) * 100}%`, height: '100%', backgroundColor: C.red }} />
-      </View>
-      {wheel ? (
-        <Animated.View key={wheel.id} entering={FadeIn.duration(350)} style={{ alignItems: 'center' }}>
-          <Txt v="label" color={C.textDim}>
-            {wheel.emoji} {wheel.blurb}
-          </Txt>
-          <Txt v="title" style={{ marginTop: 2 }}>
-            {wheel.title}
-          </Txt>
-          <View style={{ height: 50, justifyContent: 'center' }}>
-            {current ? (
-              <Animated.View key={`r${winner}`} entering={ZoomIn.springify().damping(12)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                {current.flag ? <Flag id={current.flag} width={40} /> : current.emoji ? <Txt v="h1">{current.emoji}</Txt> : null}
-                <Txt v="display" color={C.gold} style={{ fontSize: 38, lineHeight: 42 }}>
-                  {current.stars ? '★'.repeat(current.stars) : current.label}
-                </Txt>
-              </Animated.View>
-            ) : (
-              <Txt v="display" color={withAlpha('#FFFFFF', 0.15)} style={{ fontSize: 38, lineHeight: 42 }}>
-                {phase === 'spinning' ? '· · ·' : '?'}
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <Backdrop tint={C.red} intensity={0.7} />
+      <View style={{ flex: 1, paddingTop: insets.top + S.sm, paddingBottom: insets.bottom + S.md, paddingHorizontal: S.lg }}>
+        {/* Top bar: back, progress */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.md }}>
+          <IconBtn icon="back" label="Back to home" onPress={() => router.replace('/')} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Txt v="micro" color={C.textDim}>
+                Spin your driver
               </Txt>
-            )}
+              <Txt v="micro" color={C.textMute}>
+                {Math.min(step + 1, total)} of {total}
+              </Txt>
+            </View>
+            <ProgressRail step={step} total={total} />
           </View>
-          <View style={{ marginTop: 16 }}>
-            <SpinWheel slices={wheel.slices} size={size} request={request} onDone={onDone} onPressHub={spin} disabled={phase !== 'idle'} fast={auto || spinSpeed === 'fast'} winner={winner} />
+        </View>
+
+        {wheel ? (
+          <View style={{ marginTop: S.md }}>
+            <StepLockup step={step} total={total} wheel={wheel} />
           </View>
-        </Animated.View>
-      ) : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: S.lg, justifyContent: 'center' }}>
-        {chips.map((c) => (
-          <PickChip key={c.key} label={c.label} flag={c.flag} emoji={c.emoji} />
-        ))}
+        ) : null}
+
+        {/* Wheel zone: fills whatever height is left */}
+        <View onLayout={onZone} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginVertical: S.xs, marginHorizontal: -S.lg + 6 }}>
+          {wheel && size > 0 ? (
+            <WheelEnter key={wheel.id} style={{ marginTop: size * 0.03 }}>
+              <SpinWheel
+                slices={wheel.slices}
+                size={size}
+                request={request}
+                onDone={onDone}
+                onPressHub={spin}
+                disabled={phase !== 'idle' || auto}
+                fast={auto || spinSpeed === 'fast'}
+                winner={winner}
+                accents={accents}
+                captions={captions}
+                hubTop={String(step + 1).padStart(2, '0')}
+                hubLabel="SPIN"
+              />
+            </WheelEnter>
+          ) : null}
+        </View>
+
+        {wheel ? <ResultPlate wheel={wheel} slice={current} phase={phase} world={world} accent={current && accents ? (accents[winner!] ?? current.color) : undefined} /> : null}
+        <View style={{ marginTop: S.sm }}>
+          <PicksStrip picks={picks} />
+        </View>
+
+        {/* Thumb zone */}
+        <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.sm }}>
+          <Btn label="Spin" icon="refresh" onPress={spin} disabled={phase !== 'idle' || auto} style={{ flex: 1 }} testID="spin" />
+          <Btn label={auto ? 'Stop' : 'Auto'} icon={auto ? 'pause' : 'ff'} kind="secondary" onPress={() => setAuto((a) => !a)} style={{ width: 128 }} chevrons={false} testID="spin-all" />
+        </View>
       </View>
-      <View style={{ marginTop: S.lg, gap: S.sm }}>
-        <Btn label={phase === 'spinning' ? 'Spinning…' : phase === 'result' ? 'Next wheel…' : 'Spin'} icon="refresh" onPress={spin} disabled={phase !== 'idle' || auto} />
-        {!auto ? <Btn label="Spin all remaining" kind="ghost" small icon="ff" onPress={() => setAuto(true)} /> : null}
-      </View>
-      <View style={{ height: 8 }} />
-      <Pill label={picks.series ? seriesDef(String(picks.series.value)).name : 'Your journey starts here'} color={C.surface2} textColor={C.textDim} style={{ alignSelf: 'center', marginTop: S.md }} />
-    </Screen>
+    </View>
   );
 }

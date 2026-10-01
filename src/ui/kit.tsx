@@ -1,31 +1,41 @@
+/**
+ * Chequered Lives UI kit: the "Midnight Motorsport" component family.
+ *
+ * Shapes are technical rather than soft: flat carbon panels with hairline
+ * borders, angled plates for actions and positions, segmented telemetry
+ * meters, and condensed racing numerals as the main graphic element.
+ */
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import Animated, { Easing, FadeIn, runOnJS, SlideInDown, useAnimatedReaction, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, Line, Pattern, Rect } from 'react-native-svg';
+import Svg, { Defs, Path, Pattern, Rect } from 'react-native-svg';
+import { TrackMap } from '../art/TrackMap';
 import { haptic } from './haptics';
 import { Icon, type IconName } from './Icon';
 import { appMaxWidth } from './screen';
-import { C, F, R, readableOn, S, shade, withAlpha } from './theme';
+import { C, F, R, ratingColor, readableOn, S, withAlpha } from './theme';
 
 // ---------------------------------------------------------------------------
 // Typography
 // ---------------------------------------------------------------------------
 
-type Variant = 'display' | 'title' | 'h1' | 'h2' | 'h3' | 'body' | 'bodyStrong' | 'small' | 'label' | 'num' | 'numBig';
+type Variant = 'hero' | 'display' | 'title' | 'h1' | 'h2' | 'h3' | 'body' | 'bodyStrong' | 'small' | 'label' | 'micro' | 'num' | 'numBig';
 
 const VARIANTS: Record<Variant, TextStyle> = {
-  display: { fontFamily: F.display, fontSize: 44, lineHeight: 44, letterSpacing: 0.5, textTransform: 'uppercase' },
+  hero: { fontFamily: F.display, fontSize: 72, lineHeight: 70, fontVariant: ['tabular-nums'] },
+  display: { fontFamily: F.display, fontSize: 44, lineHeight: 44, letterSpacing: 0.3, textTransform: 'uppercase' },
   title: { fontFamily: F.title, fontSize: 30, lineHeight: 32, textTransform: 'uppercase' },
   h1: { fontFamily: F.title, fontSize: 24, lineHeight: 27, textTransform: 'uppercase' },
-  h2: { fontFamily: F.heading, fontSize: 19, lineHeight: 22, textTransform: 'uppercase', letterSpacing: 0.3 },
-  h3: { fontFamily: F.heading, fontSize: 16, lineHeight: 19, textTransform: 'uppercase', letterSpacing: 0.4 },
-  body: { fontFamily: F.body, fontSize: 15, lineHeight: 21 },
-  bodyStrong: { fontFamily: F.bodySemi, fontSize: 15, lineHeight: 21 },
-  small: { fontFamily: F.bodyMedium, fontSize: 12.5, lineHeight: 17 },
-  label: { fontFamily: F.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 1.2, textTransform: 'uppercase' },
+  h2: { fontFamily: F.heading, fontSize: 19, lineHeight: 22, textTransform: 'uppercase', letterSpacing: 0.4 },
+  h3: { fontFamily: F.heading, fontSize: 16, lineHeight: 19, textTransform: 'uppercase', letterSpacing: 0.5 },
+  body: { fontFamily: F.body, fontSize: 15, lineHeight: 22 },
+  bodyStrong: { fontFamily: F.bodySemi, fontSize: 15, lineHeight: 22 },
+  small: { fontFamily: F.bodyMedium, fontSize: 13, lineHeight: 18 },
+  label: { fontFamily: F.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 1.6, textTransform: 'uppercase' },
+  micro: { fontFamily: F.bodyBold, fontSize: 9.5, lineHeight: 12, letterSpacing: 1.3, textTransform: 'uppercase' },
   num: { fontFamily: F.heading, fontSize: 17, lineHeight: 20, fontVariant: ['tabular-nums'] },
   numBig: { fontFamily: F.display, fontSize: 34, lineHeight: 36, fontVariant: ['tabular-nums'] },
 };
@@ -52,8 +62,44 @@ export function Txt({
   );
 }
 
+/** A number that ticks up to its value when it first appears. */
+export function CountUp({
+  value,
+  duration = 650,
+  delay = 0,
+  style,
+  color = C.text,
+  v = 'numBig',
+}: {
+  value: number;
+  duration?: number;
+  delay?: number;
+  style?: StyleProp<TextStyle>;
+  color?: string;
+  v?: Variant;
+}) {
+  const t = useSharedValue(0);
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    t.value = 0;
+    t.value = withDelay(delay, withTiming(1, { duration, easing: Easing.out(Easing.cubic) }));
+  }, [value, delay, duration, t]);
+  useAnimatedReaction(
+    () => Math.round(t.value * value),
+    (cur, prev) => {
+      if (cur !== prev) runOnJS(setShown)(cur);
+    },
+    [value],
+  );
+  return (
+    <Txt v={v} color={color} style={style}>
+      {shown}
+    </Txt>
+  );
+}
+
 // ---------------------------------------------------------------------------
-// Buttons
+// Press feedback
 // ---------------------------------------------------------------------------
 
 export function Press({
@@ -61,7 +107,7 @@ export function Press({
   children,
   style,
   disabled,
-  scale = 0.96,
+  scale = 0.97,
   feedback = 'tap',
   label,
   testID,
@@ -88,7 +134,7 @@ export function Press({
       accessibilityState={disabled ? { disabled: true } : undefined}
       testID={testID}
       onPressIn={() => {
-        s.set(withSpring(scale, { damping: 18, stiffness: 400 }));
+        s.set(withSpring(scale, { damping: 18, stiffness: 420 }));
       }}
       onPressOut={() => {
         s.set(withSpring(1, { damping: 14, stiffness: 300 }));
@@ -99,7 +145,7 @@ export function Press({
         onPress?.();
       }}
     >
-      <Animated.View style={[anim, inner, disabled && { opacity: 0.45 }]}>{children}</Animated.View>
+      <Animated.View style={[anim, inner, disabled && { opacity: 0.4 }]}>{children}</Animated.View>
     </Pressable>
   );
 }
@@ -141,6 +187,25 @@ function splitStyle(style: StyleProp<ViewStyle>): { outer: ViewStyle; inner: Vie
   return { outer: outer as ViewStyle, inner: inner as ViewStyle };
 }
 
+// ---------------------------------------------------------------------------
+// Buttons: angled plates
+// ---------------------------------------------------------------------------
+
+const SKEW = '-11deg';
+const UNSKEW = '11deg';
+
+/** Three forward chevrons: the "go" mark on launch plates. */
+export function Chevrons({ color = '#FFFFFF', size = 14 }: { color?: string; size?: number }) {
+  const w = size * 2;
+  return (
+    <Svg width={w} height={size} viewBox="0 0 28 14">
+      {[0, 1, 2].map((i) => (
+        <Path key={i} d={`M${2 + i * 8} 1 L${8 + i * 8} 7 L${2 + i * 8} 13`} stroke={color} strokeOpacity={0.45 + i * 0.27} strokeWidth={2.6} fill="none" strokeLinecap="square" />
+      ))}
+    </Svg>
+  );
+}
+
 type BtnKind = 'primary' | 'gold' | 'secondary' | 'ghost' | 'danger' | 'team';
 
 export function Btn({
@@ -154,6 +219,7 @@ export function Btn({
   color,
   small,
   testID,
+  chevrons,
 }: {
   label: string;
   onPress?: () => void;
@@ -165,43 +231,89 @@ export function Btn({
   color?: string;
   small?: boolean;
   testID?: string;
+  /** Show the forward chevrons (defaults on for primary-type plates). */
+  chevrons?: boolean;
 }) {
-  const base = kind === 'primary' ? C.red : kind === 'gold' ? C.gold : kind === 'danger' ? '#8B1E2B' : kind === 'team' ? (color ?? C.red) : C.surface3;
-  const fg = kind === 'ghost' ? C.text : readableOn(base);
-  const gradient: [string, string] = kind === 'ghost' ? ['transparent', 'transparent'] : [shade(base, 0.12), shade(base, -0.18)];
+  const base = kind === 'primary' ? C.red : kind === 'gold' ? C.gold : kind === 'danger' ? C.redDeep : kind === 'team' ? (color ?? C.red) : kind === 'secondary' ? C.surface2 : 'transparent';
+  const filled = kind === 'primary' || kind === 'gold' || kind === 'danger' || kind === 'team';
+  const fg = filled ? readableOn(base) : C.text;
+  const showChevrons = chevrons ?? (filled && !small);
+  const h = small ? 46 : sub ? 62 : 56;
+  const p = useSharedValue(0);
+  const plate = useAnimatedStyle(() => ({ transform: [{ scale: 1 - p.value * 0.03 }] }));
+  const flash = useAnimatedStyle(() => ({ opacity: p.value * 0.14 }));
+  const chev = useAnimatedStyle(() => ({ transform: [{ translateX: p.value * 5 }] }));
+  const { outer } = splitStyle(style);
   return (
-    <Press onPress={onPress} disabled={disabled} label={sub ? `${label}. ${sub}` : label} testID={testID} style={[{ borderRadius: R.md, overflow: 'hidden' }, style]}>
-      <LinearGradient
-        colors={gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[
-          styles.btn,
-          small && { paddingVertical: 9, minHeight: 40 },
-          kind === 'ghost' && { borderWidth: 1, borderColor: C.lineStrong },
-          kind === 'secondary' && { borderWidth: 1, borderColor: C.lineStrong },
-        ]}
-      >
-        {icon ? <Icon name={icon} size={small ? 17 : 20} color={fg} /> : null}
-        <View style={{ alignItems: icon ? 'flex-start' : 'center', flexShrink: 1 }}>
-          <Txt v={small ? 'h3' : 'h2'} color={fg} numberOfLines={1}>
-            {label}
-          </Txt>
-          {sub ? (
-            <Txt v="small" color={withAlpha(fg === '#FFFFFF' ? '#FFFFFF' : '#0B0F19', 0.75)} numberOfLines={1}>
-              {sub}
-            </Txt>
-          ) : null}
+    <Pressable
+      style={outer}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={sub ? `${label}. ${sub}` : label}
+      accessibilityState={disabled ? { disabled: true } : undefined}
+      testID={testID}
+      onPressIn={() => p.set(withTiming(1, { duration: 90 }))}
+      onPressOut={() => p.set(withTiming(0, { duration: 180 }))}
+      onPress={() => {
+        haptic.tap();
+        onPress?.();
+      }}
+    >
+      <Animated.View style={[{ height: h, marginHorizontal: h * 0.1, opacity: disabled ? 0.4 : 1 }, plate]}>
+        <View
+          style={{
+            flex: 1,
+            transform: [{ skewX: SKEW }],
+            borderRadius: R.xs,
+            overflow: 'hidden',
+            backgroundColor: base,
+            borderWidth: filled ? 0 : 1,
+            borderColor: kind === 'ghost' ? C.lineStrong : C.line,
+          }}
+        >
+          {filled ? <LinearGradient colors={[withAlpha('#FFFFFF', 0.16), withAlpha('#FFFFFF', 0), withAlpha('#000000', 0.2)]} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} /> : null}
+          <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1, backgroundColor: withAlpha('#FFFFFF', filled ? 0.38 : 0.07) }} />
+          <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF' }, flash]} />
+          <View
+            style={{
+              flex: 1,
+              transform: [{ skewX: UNSKEW }],
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: showChevrons ? 'space-between' : 'center',
+              paddingHorizontal: small ? 16 : 22,
+              gap: 10,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 }}>
+              {icon ? <Icon name={icon} size={small ? 17 : 20} color={fg} strokeWidth={2.3} /> : null}
+              <View style={{ flexShrink: 1, alignItems: showChevrons || icon ? 'flex-start' : 'center' }}>
+                <Text style={[styles.btnLabel, small && styles.btnLabelSmall, { color: fg }]} numberOfLines={1}>
+                  {label}
+                </Text>
+                {sub ? (
+                  <Text style={[styles.btnSub, { color: withAlpha(fg === '#FFFFFF' ? '#FFFFFF' : '#07090E', 0.78) }]} numberOfLines={1}>
+                    {sub}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+            {showChevrons ? (
+              <Animated.View style={chev}>
+                <Chevrons color={fg} size={small ? 11 : 14} />
+              </Animated.View>
+            ) : null}
+          </View>
         </View>
-      </LinearGradient>
-    </Press>
+      </Animated.View>
+    </Pressable>
   );
 }
 
 export function IconBtn({
   icon,
   onPress,
-  size = 40,
+  size = 44,
   color = C.text,
   bg = C.surface2,
   style,
@@ -222,9 +334,10 @@ export function IconBtn({
       onPress={onPress}
       label={label ?? icon}
       testID={testID}
-      style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }, style]}
+      scale={0.92}
+      style={[{ width: size, height: size, borderRadius: R.sm, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line }, style]}
     >
-      <Icon name={icon} size={size * 0.5} color={color} />
+      <Icon name={icon} size={size * 0.46} color={color} strokeWidth={2.2} />
     </Press>
   );
 }
@@ -233,32 +346,56 @@ export function IconBtn({
 // Surfaces
 // ---------------------------------------------------------------------------
 
-/** Dimmed full-screen backdrop for modal sheets; keeps content phone-width on the web. */
-export function ModalScrim({ children, bg = 'rgba(2,4,10,0.85)', center = false }: { children: React.ReactNode; bg?: string; center?: boolean }) {
+/** Viewfinder-style corner brackets: the broadcast "framing" motif. */
+export function CornerTicks({ color = C.lineStrong, size = 9, inset = 0 }: { color?: string; size?: number; inset?: number }) {
+  const b = 1.5;
+  const base: ViewStyle = { position: 'absolute', width: size, height: size, borderColor: color };
   return (
-    <View style={{ flex: 1, backgroundColor: bg, justifyContent: 'center', padding: S.lg }}>
-      <View style={{ width: '100%', maxWidth: appMaxWidth, alignSelf: 'center', alignItems: center ? 'center' : undefined }}>{children}</View>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
+      <View style={[base, { left: inset, top: inset, borderLeftWidth: b, borderTopWidth: b }]} />
+      <View style={[base, { right: inset, top: inset, borderRightWidth: b, borderTopWidth: b }]} />
+      <View style={[base, { left: inset, bottom: inset, borderLeftWidth: b, borderBottomWidth: b }]} />
+      <View style={[base, { right: inset, bottom: inset, borderRightWidth: b, borderBottomWidth: b }]} />
     </View>
   );
 }
 
-export function Card({ children, style, accent, padded = true }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; accent?: string; padded?: boolean }) {
+/** Flat carbon panel with a hairline edge. `accent` adds a stripe on the left edge. */
+export function Card({
+  children,
+  style,
+  accent,
+  padded = true,
+  ticks,
+  raised,
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  accent?: string;
+  padded?: boolean;
+  ticks?: boolean | string;
+  raised?: boolean;
+}) {
   return (
-    <View style={[styles.card, padded && { padding: S.lg }, style]}>
-      {accent ? <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: accent }} /> : null}
+    <View style={[styles.card, raised && { backgroundColor: C.surface2 }, padded && { padding: S.lg }, accent ? { paddingLeft: padded ? S.lg + 3 : 3 } : null, style]}>
+      {accent ? <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: accent }} /> : null}
+      {ticks ? <CornerTicks color={typeof ticks === 'string' ? ticks : C.lineStrong} /> : null}
       {children}
     </View>
   );
 }
 
+/** Small angled tag (status, reasons, metadata). */
 export function Pill({ label, color = C.surface3, textColor, icon, style }: { label: string; color?: string; textColor?: string; icon?: IconName; style?: StyleProp<ViewStyle> }) {
   const fg = textColor ?? readableOn(color);
   return (
-    <View style={[styles.pill, { backgroundColor: color }, style]}>
-      {icon ? <Icon name={icon} size={12} color={fg} strokeWidth={2.4} /> : null}
-      <Txt v="label" color={fg} style={{ fontSize: 10.5, letterSpacing: 0.9 }}>
-        {label}
-      </Txt>
+    <View style={[styles.tag, { backgroundColor: color }, style]}>
+      <View style={{ transform: [{ skewX: '10deg' }], flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        {icon ? <Icon name={icon} size={11} color={fg} strokeWidth={2.6} /> : null}
+        <Txt v="micro" color={fg} style={{ fontSize: 10, letterSpacing: 1.1 }}>
+          {label}
+        </Txt>
+      </View>
     </View>
   );
 }
@@ -273,50 +410,213 @@ export function Stars({ value, max = 5, size = 14, color = C.gold }: { value: nu
   );
 }
 
-export function StatBar({ label, value, max = 100, color = C.red, delta }: { label: string; value: number; max?: number; color?: string; delta?: number }) {
+/** Segmented telemetry meter: the rating bar used everywhere. */
+export function Meter({
+  value,
+  max = 100,
+  color,
+  segments = 20,
+  height = 8,
+  delay = 0,
+  animate = true,
+}: {
+  value: number;
+  max?: number;
+  color?: string;
+  segments?: number;
+  height?: number;
+  delay?: number;
+  animate?: boolean;
+}) {
   const pct = Math.max(0, Math.min(1, value / max));
+  const filled = Math.round(pct * segments);
+  const col = color ?? ratingColor(value);
+  const [w, setW] = useState(0);
+  const reveal = useSharedValue(animate ? 0 : 1);
+  useEffect(() => {
+    if (!animate) return;
+    reveal.value = 0;
+    reveal.value = withDelay(delay, withTiming(1, { duration: 520, easing: Easing.out(Easing.cubic) }));
+  }, [value, delay, animate, reveal]);
+  const clip = useAnimatedStyle(() => ({ width: w * reveal.value }));
+  const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
+  const row = (on: boolean) => (
+    <View style={{ flexDirection: 'row', gap: 2, height, width: w || undefined }}>
+      {Array.from({ length: segments }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            backgroundColor: on ? (i < filled ? col : 'transparent') : C.surface3,
+            opacity: on && i < filled ? 0.5 + (0.5 * (i + 1)) / Math.max(1, filled) : 1,
+            transform: [{ skewX: '-18deg' }],
+          }}
+        />
+      ))}
+    </View>
+  );
   return (
-    <View style={{ gap: 5 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Txt v="label" color={C.textDim}>
-          {label}
-        </Txt>
-        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'baseline' }}>
-          {delta ? (
-            <Txt v="small" color={delta > 0 ? C.green : C.red}>
-              {delta > 0 ? `+${delta}` : delta}
-            </Txt>
-          ) : null}
-          <Txt v="num">{Math.round(value)}</Txt>
-        </View>
-      </View>
-      <View style={{ height: 6, backgroundColor: C.surface3, borderRadius: 3, overflow: 'hidden' }}>
-        <LinearGradient colors={[shade(color, -0.2), color]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ width: `${pct * 100}%`, height: '100%', borderRadius: 3 }} />
-      </View>
+    <View onLayout={onLayout} style={{ height }}>
+      {row(false)}
+      {w ? <Animated.View style={[{ position: 'absolute', left: 0, top: 0, height, overflow: 'hidden' }, clip]}>{row(true)}</Animated.View> : null}
     </View>
   );
 }
 
-export function PosBadge({ pos, size = 30, dnf }: { pos: number; size?: number; dnf?: boolean }) {
-  const bg = dnf ? '#3A1A22' : pos === 1 ? C.gold : pos === 2 ? C.silver : pos === 3 ? C.bronze : C.surface3;
-  const fg = dnf ? C.red : pos <= 3 ? '#0B0F19' : C.text;
+/** Label + big number + segmented meter. */
+export function StatBar({
+  label,
+  value,
+  max = 100,
+  color,
+  delta,
+  delay = 0,
+  compact,
+}: {
+  label: string;
+  value: number;
+  max?: number;
+  color?: string;
+  delta?: number;
+  delay?: number;
+  compact?: boolean;
+}) {
+  const col = color ?? ratingColor(value);
   return (
-    <View style={{ width: size, height: size * 0.82, borderRadius: 6, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', transform: [{ skewX: '-8deg' }] }}>
-      <Txt v="num" color={fg} style={{ fontSize: size * 0.48, lineHeight: size * 0.56 }}>
-        {dnf ? 'DNF' : pos}
+    <View style={{ gap: compact ? 5 : 7 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <Txt v="label" color={C.textDim}>
+          {label}
+        </Txt>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+          {delta ? (
+            <Txt v="num" color={delta > 0 ? C.green : C.red} style={{ fontSize: 14 }}>
+              {delta > 0 ? `+${delta}` : delta}
+            </Txt>
+          ) : null}
+          <Txt v="numBig" color={col} style={{ fontSize: compact ? 20 : 24, lineHeight: compact ? 21 : 25 }}>
+            {Math.round(value)}
+          </Txt>
+        </View>
+      </View>
+      <Meter value={value} max={max} color={col} delay={delay} height={compact ? 6 : 8} />
+    </View>
+  );
+}
+
+/** Position plate: P1 gold, P2 silver, P3 bronze; `player` paints it signal red. */
+export function PosBadge({ pos, size = 30, dnf, player, prefix }: { pos: number; size?: number; dnf?: boolean; player?: boolean; prefix?: boolean }) {
+  const podium = !dnf && pos >= 1 && pos <= 3;
+  const bg = dnf ? withAlpha(C.red, 0.18) : pos === 1 ? C.gold : pos === 2 ? C.silver : pos === 3 ? C.bronze : player ? C.red : C.surface3;
+  const fg = dnf ? C.red : podium ? '#07090E' : C.text;
+  return (
+    <View
+      style={{
+        minWidth: size,
+        height: size * 0.8,
+        paddingHorizontal: size * 0.14,
+        borderRadius: R.xs,
+        backgroundColor: bg,
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: [{ skewX: SKEW }],
+      }}
+    >
+      <Text style={{ transform: [{ skewX: UNSKEW }], fontFamily: F.display, fontSize: size * 0.5, lineHeight: size * 0.6, color: fg, fontVariant: ['tabular-nums'] }}>
+        {dnf ? 'DNF' : `${prefix ? 'P' : ''}${pos}`}
+      </Text>
+    </View>
+  );
+}
+
+/** Racing number plate in team colours. */
+export function NumberPlate({ number, colors, size = 34 }: { number: number; colors?: { primary: string; secondary: string }; size?: number }) {
+  const bg = colors?.primary ?? C.surface3;
+  return (
+    <View
+      style={{
+        height: size,
+        minWidth: size * 1.25,
+        paddingHorizontal: size * 0.2,
+        backgroundColor: bg,
+        borderRadius: R.xs,
+        borderWidth: 2,
+        borderColor: colors?.secondary ?? C.lineStrong,
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: [{ skewX: SKEW }],
+      }}
+    >
+      <Text style={{ transform: [{ skewX: UNSKEW }], fontFamily: F.display, fontSize: size * 0.62, lineHeight: size * 0.74, color: readableOn(bg) }}>{number}</Text>
+    </View>
+  );
+}
+
+/** Team stripe: primary over secondary, the team's signature on any row. */
+export function TeamStripe({ colors, height = 22, width = 4 }: { colors?: { primary: string; secondary: string }; height?: number; width?: number }) {
+  return (
+    <View style={{ width, height, transform: [{ skewX: '-14deg' }], overflow: 'hidden', borderRadius: 1 }}>
+      <View style={{ flex: 3, backgroundColor: colors?.primary ?? C.steel }} />
+      <View style={{ flex: 1, backgroundColor: colors?.secondary ?? C.surface3 }} />
+    </View>
+  );
+}
+
+/** Section header: tick + tracked label + hairline rule. */
+export function SectionTitle({ title, right, style }: { title: string; right?: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: S.xl, marginBottom: S.md }, style]}>
+      <View style={{ width: 3, height: 13, backgroundColor: C.red, transform: [{ skewX: '-18deg' }] }} />
+      <Txt v="label" color={C.text} style={{ fontSize: 12, letterSpacing: 2 }}>
+        {title}
+      </Txt>
+      <View style={{ flex: 1, height: 1, backgroundColor: C.line }} />
+      {right}
+    </View>
+  );
+}
+
+/** Small tracked label with an optional colour tick. */
+export function Kicker({ children, color = C.textDim, tick, style }: { children: React.ReactNode; color?: string; tick?: string; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 7 }, style]}>
+      {tick ? <View style={{ width: 3, height: 11, backgroundColor: tick, transform: [{ skewX: '-18deg' }] }} /> : null}
+      <Txt v="label" color={color}>
+        {children}
       </Txt>
     </View>
   );
 }
 
-export function SectionTitle({ title, right, style }: { title: string; right?: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+/** Label over a big value: the stat cluster atom. */
+export function StatCell({
+  label,
+  value,
+  sub,
+  color = C.text,
+  align = 'left',
+  size = 30,
+}: {
+  label: string;
+  value: React.ReactNode;
+  sub?: string;
+  color?: string;
+  align?: 'left' | 'center' | 'right';
+  size?: number;
+}) {
   return (
-    <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: S.xl, marginBottom: S.sm }, style]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ width: 4, height: 16, backgroundColor: C.red, borderRadius: 2, transform: [{ skewX: '-12deg' }] }} />
-        <Txt v="h2">{title}</Txt>
-      </View>
-      {right}
+    <View style={{ alignItems: align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center', gap: 2 }}>
+      <Txt v="micro" color={C.textMute}>
+        {label}
+      </Txt>
+      <Txt v="numBig" color={color} style={{ fontSize: size, lineHeight: size * 1.04 }} numberOfLines={1}>
+        {value}
+      </Txt>
+      {sub ? (
+        <Txt v="small" color={C.textDim} numberOfLines={1} style={{ fontSize: 12 }}>
+          {sub}
+        </Txt>
+      ) : null}
     </View>
   );
 }
@@ -326,41 +626,66 @@ export function Divider({ style }: { style?: StyleProp<ViewStyle> }) {
 }
 
 // ---------------------------------------------------------------------------
-// Screen scaffolding
+// Atmosphere: the world behind every screen
 // ---------------------------------------------------------------------------
 
-export function Backdrop({ tint = C.red }: { tint?: string }) {
+let patternIds = 0;
+
+/**
+ * Night-race atmosphere: ink base, a single light source tinted by the
+ * screen's accent, a faint telemetry grid, and optional giant numeral and
+ * track outline for screens that want more of the world behind them.
+ */
+export function Backdrop({ tint = C.red, number, track, intensity = 1 }: { tint?: string; number?: number | string; track?: string; intensity?: number }) {
+  const id = useMemo(() => `grid${patternIds++}`, []);
   return (
-    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
-      <LinearGradient colors={[C.bg2, C.bg, '#04050A']} style={StyleSheet.absoluteFill} />
-      <LinearGradient colors={[withAlpha(tint, 0.2), 'transparent']} start={{ x: 1, y: 0 }} end={{ x: 0.2, y: 0.5 }} style={StyleSheet.absoluteFill} />
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none', backgroundColor: C.bg }]}>
+      <LinearGradient colors={[withAlpha(tint, 0.2 * intensity), withAlpha(tint, 0)]} start={{ x: 1, y: 0 }} end={{ x: 0.2, y: 0.6 }} style={StyleSheet.absoluteFill} />
       <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
         <Defs>
-          <Pattern id="diag" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
-            <Line x1="0" y1="0" x2="0" y2="14" stroke="#FFFFFF" strokeWidth="1" strokeOpacity="0.022" />
+          <Pattern id={id} width="44" height="44" patternUnits="userSpaceOnUse">
+            <Path d="M44 0 L0 0 0 44" stroke="#F2EEE6" strokeOpacity="0.032" strokeWidth="1" fill="none" />
           </Pattern>
         </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#diag)" />
+        <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
       </Svg>
+      {track ? (
+        <View style={{ position: 'absolute', right: -60, top: 40, opacity: 0.09 }}>
+          <TrackMap trackId={track} width={360} height={300} color="#F2EEE6" />
+        </View>
+      ) : null}
+      {number !== undefined ? (
+        <Text style={{ position: 'absolute', right: -14, top: 70, fontFamily: F.display, fontSize: 300, lineHeight: 300, color: withAlpha('#F2EEE6', 0.035) }}>{number}</Text>
+      ) : null}
+      <LinearGradient colors={[withAlpha('#000000', 0), withAlpha('#000000', 0.5)]} start={{ x: 0, y: 0.55 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
     </View>
   );
 }
 
-export function Header({ title, sub, onBack, right, back = true }: { title: string; sub?: string; onBack?: () => void; right?: React.ReactNode; back?: boolean }) {
+// ---------------------------------------------------------------------------
+// Screen scaffolding
+// ---------------------------------------------------------------------------
+
+export function Header({ title, sub, onBack, right, back = true, kicker }: { title: string; sub?: string; onBack?: () => void; right?: React.ReactNode; back?: boolean; kicker?: string }) {
   return (
     <View style={styles.header}>
-      {back ? <IconBtn icon="back" onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')))} /> : <View style={{ width: 40 }} />}
-      <View style={{ flex: 1, alignItems: 'center' }}>
-        <Txt v="h1" numberOfLines={1}>
+      {back ? <IconBtn icon="back" label="Back" onPress={onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')))} /> : null}
+      <View style={{ flex: 1 }}>
+        {kicker ? (
+          <Txt v="micro" color={C.red} numberOfLines={1}>
+            {kicker}
+          </Txt>
+        ) : null}
+        <Txt v="h1" numberOfLines={1} style={{ fontSize: 23, lineHeight: 26 }}>
           {title}
         </Txt>
         {sub ? (
-          <Txt v="small" color={C.textDim} numberOfLines={1}>
+          <Txt v="small" color={C.textDim} numberOfLines={1} style={{ fontSize: 12.5 }}>
             {sub}
           </Txt>
         ) : null}
       </View>
-      {right ?? <View style={{ width: 40 }} />}
+      {right ?? null}
     </View>
   );
 }
@@ -373,6 +698,7 @@ export function Screen({
   footer,
   contentStyle,
   padded = true,
+  backdrop,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
@@ -381,12 +707,14 @@ export function Screen({
   footer?: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   padded?: boolean;
+  /** Extra atmosphere: a giant numeral and/or a faint track outline. */
+  backdrop?: { number?: number | string; track?: string; intensity?: number };
 }) {
   const insets = useSafeAreaInsets();
   const inner = <View style={[padded && { paddingHorizontal: S.lg }, { paddingBottom: footer ? S.lg : insets.bottom + S.xl }, contentStyle]}>{children}</View>;
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <Backdrop tint={tint} />
+      <Backdrop tint={tint} {...backdrop} />
       <View style={{ paddingTop: insets.top }}>{header}</View>
       {scroll ? (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
@@ -395,43 +723,121 @@ export function Screen({
       ) : (
         <View style={{ flex: 1 }}>{inner}</View>
       )}
-      {footer ? <View style={{ paddingHorizontal: S.lg, paddingTop: S.sm, paddingBottom: insets.bottom + S.md }}>{footer}</View> : null}
+      {footer ? (
+        <View style={{ paddingHorizontal: S.lg, paddingTop: S.sm, paddingBottom: insets.bottom + S.md, backgroundColor: C.bg }}>
+          <LinearGradient colors={[withAlpha(C.bg, 0), C.bg]} style={{ position: 'absolute', left: 0, right: 0, top: -26, height: 26, pointerEvents: 'none' }} />
+          {footer}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** Dimmed full-screen backdrop for centred dialogs; keeps content phone-width on the web. */
+export function ModalScrim({ children, bg = 'rgba(3,4,8,0.86)', center = false }: { children: React.ReactNode; bg?: string; center?: boolean }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: bg, justifyContent: 'center', padding: S.lg }}>
+      <View style={{ width: '100%', maxWidth: appMaxWidth, alignSelf: 'center', alignItems: center ? 'center' : undefined }}>{children}</View>
+    </View>
+  );
+}
+
+/**
+ * Bottom sheet in a modal: content arrives from the bottom edge where the
+ * thumb is. `accent` colours the top edge.
+ */
+export function SheetModal({
+  visible = true,
+  onClose,
+  children,
+  accent = C.red,
+  dismissable = true,
+}: {
+  visible?: boolean;
+  onClose?: () => void;
+  children: React.ReactNode;
+  accent?: string;
+  dismissable?: boolean;
+}) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={() => (dismissable ? onClose?.() : undefined)}>
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <Animated.View entering={FadeIn.duration(160)} style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(3,4,8,0.72)' }]}>
+          {dismissable ? <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Close" /> : null}
+        </Animated.View>
+        <Animated.View entering={SlideInDown.duration(260).easing(Easing.out(Easing.cubic))} style={{ width: '100%', maxWidth: appMaxWidth, alignSelf: 'center' }}>
+          <SheetBody accent={accent} bottom={insets.bottom}>
+            {children}
+          </SheetBody>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+/** The sheet's surface (also used by in-screen sheets such as race decisions). */
+export function SheetBody({ children, accent = C.red, bottom = 0 }: { children: React.ReactNode; accent?: string; bottom?: number }) {
+  return (
+    <View
+      style={{
+        backgroundColor: C.surface,
+        borderTopLeftRadius: R.xl,
+        borderTopRightRadius: R.xl,
+        paddingHorizontal: S.lg,
+        paddingTop: 10,
+        paddingBottom: bottom + S.lg,
+        borderTopWidth: 1,
+        borderColor: C.lineStrong,
+        overflow: 'hidden',
+      }}
+    >
+      <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 2, backgroundColor: accent }} />
+      <View style={{ alignSelf: 'center', width: 38, height: 4, borderRadius: 2, backgroundColor: C.surface3, marginBottom: 12 }} />
+      {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    minHeight: 54,
-    borderRadius: R.md,
+  btnLabel: {
+    fontFamily: F.title,
+    fontSize: 20,
+    lineHeight: 23,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  btnLabelSmall: {
+    fontFamily: F.heading,
+    fontSize: 15,
+    lineHeight: 18,
+    letterSpacing: 0.8,
+  },
+  btnSub: {
+    fontFamily: F.bodySemi,
+    fontSize: 12,
+    lineHeight: 15,
   },
   card: {
     backgroundColor: C.surface,
-    borderRadius: R.lg,
+    borderRadius: R.sm,
     borderWidth: 1,
     borderColor: C.line,
     overflow: 'hidden',
   },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: R.pill,
+  tag: {
     alignSelf: 'flex-start',
+    transform: [{ skewX: '-10deg' }],
+    borderRadius: R.xs,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: S.md,
     paddingHorizontal: S.lg,
-    paddingVertical: S.sm,
+    paddingTop: S.sm,
+    paddingBottom: S.md,
   },
 });
