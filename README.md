@@ -70,11 +70,15 @@ In development builds, two extra routes help with art work. `/dev` is a gallery 
 | `src/sim` | The game simulation in pure TypeScript with no React: seeded RNG, world, driver market, race engine, decision moments, careers, legacy and records |
 | `src/art` | Original vector art: portraits, helmets, cars and liveries, flags, track maps, badges |
 | `src/highlights` | 2D replay scenes (side, top-down, start, pit stop, podium, title) and particle effects |
-| `src/race` | Live race broadcast: track view, timing tower, decision sheet |
-| `src/ui` | Design tokens (`theme.ts`) and shared components (buttons, cards, spin wheel, sheets) |
-| `src/state` | zustand store and save files (device files on native, localStorage on web) |
+| `src/race` | The race weekend: broadcast HUD (position plate, lap counter, telemetry, battle board, event lower third, playback dock), track view, decision sheet, pre-race poster, grid and result |
+| `src/creation` | Driver creation: the spin HUD (progress rail, step lockup, result plate, picks strip) and the driver reveal |
+| `src/hub` | Career hub pieces: driver HUD, event poster, championship and team panels, thumb-zone action dock, driver file |
+| `src/ui` | The design system: tokens (`theme.ts`), the kit (plates, meters, position and number plates, tabs, sheets, backdrop), the machined spin wheel |
+| `src/state` | zustand store and saves (device files on native, IndexedDB with a localStorage fallback on web) |
 | `src/app` | Screens (Expo Router) |
 | `assets/source` | Editable SVG sources for the app icon, adaptive icon and splash |
+
+The look is one system, "Midnight Motorsport": ink navy and charcoal surfaces, warm off-white type, signal red for actions and the player, restrained cyan for information and gold only for prestige. Display type is Barlow Condensed, body text Barlow. Plates are skewed like timing graphics, data reads as HUD strips and segmented meters, and decisions arrive as bottom sheets in the thumb zone. Screens are laid out for portrait phones first; on wide web windows the game runs as a phone-width column.
 
 The simulation is deterministic: everything is derived from the world seed plus choices, so a bug report can be reproduced from a save file. The whole universe (all careers, the Archive and the world history) is one save that grows with each career, about 1–3 MB after many decades.
 

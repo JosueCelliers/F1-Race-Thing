@@ -25,8 +25,8 @@ js = js.replaceAll('</script', '<\\/script').replaceAll('<!--', '<\\!--');
 
 const page = `<title>Chequered Lives</title>
 <style>
-  :root { color-scheme: dark; box-sizing: border-box; height: 100%; background: #06080E; }
-  body { height: 100%; margin: 0; overflow: hidden; background: #06080E; color: #F4F6FA; }
+  :root { color-scheme: dark; box-sizing: border-box; height: 100%; background: #07090E; }
+  body { height: 100%; margin: 0; overflow: hidden; background: #07090E; color: #F2EEE6; }
   #root { display: flex; height: 100%; flex: 1; }
   noscript { display: block; padding: 24px 16px; font: 16px/1.5 system-ui, sans-serif; }
 </style>
