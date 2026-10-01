@@ -1,6 +1,6 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, ScrollView, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Modal, ScrollView, useWindowDimensions, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, FadeIn, FadeInDown, runOnJS, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Flag } from '../art/Flag';
@@ -220,6 +220,14 @@ function Live({
   const [speed, setSpeed] = useState(defaultSpeed);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  // Android back mid-race asks first instead of silently abandoning the race.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setConfirmLeave(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
   const speedRef = useRef(speed);
   const pausedRef = useRef(false);
   const target = useRef<{ t: number; done: () => void } | null>(null);
