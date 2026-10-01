@@ -6,7 +6,7 @@
  */
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { useScreen } from '../ui/screen';
 import Animated, { cancelAnimation, Easing, FadeIn, FadeOut, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,7 +16,7 @@ import type { HighlightActor, HighlightSpec } from '../sim/types';
 import { haptic } from '../ui/haptics';
 import { Icon } from '../ui/Icon';
 import { Press, Txt } from '../ui/kit';
-import { C, F, withAlpha } from '../ui/theme';
+import { C, F, R, withAlpha } from '../ui/theme';
 import { SideScene } from './SideScene';
 import { PitScene, PodiumScene, StartScene, TitleScene } from './SpecialScenes';
 import { TopScene } from './TopScene';
@@ -139,7 +139,7 @@ function ActorStrip({ actors, kind, prog }: { actors: HighlightActor[]; kind: st
               alignItems: 'center',
               gap: 6,
               paddingRight: 10,
-              borderRadius: 10,
+              borderRadius: R.xs,
               backgroundColor: withAlpha(a.colors.primary, 0.16),
               borderWidth: 1,
               borderColor: withAlpha(a.colors.primary, 0.55),
@@ -236,21 +236,23 @@ export function HighlightPlayer({
   else if (spec.kind === 'title') scene = <TitleScene spec={spec} prog={prog} W={W} H={H} />;
   else scene = <SideScene spec={spec} prog={prog} W={W} H={H} />;
 
-  const captionColor = BAD.has(spec.kind) ? '#C4001D' : GOLD.has(spec.kind) ? '#B98100' : C.red;
+  const captionColor = BAD.has(spec.kind) ? C.redDeep : GOLD.has(spec.kind) ? C.goldDeep : C.red;
   const context = [spec.where, spec.lap].filter(Boolean).join(' · ');
 
   return (
     <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(180)} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: '#04060B', zIndex: 50 }}>
-      <LinearGradient colors={[withAlpha(accent, 0.28), 'rgba(4,6,11,0)']} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + TOP_H + 80 }} />
+      <LinearGradient colors={[withAlpha(accent, 0.16), 'rgba(4,6,11,0)']} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + TOP_H + 80 }} />
       <Pressable style={{ flex: 1, alignItems: 'center' }} onPress={finish} accessibilityLabel={`${spec.caption}. Tap to ${inReel ? 'play the next highlight' : 'skip'}`}>
         {/* Broadcast bug */}
         <View style={{ width: W, paddingTop: insets.top + 10, paddingHorizontal: 16, height: insets.top + TOP_H, justifyContent: 'flex-start' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.red, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }}>
-              <LiveDot />
-              <Txt v="label" color="#FFFFFF" style={{ fontSize: 11 }}>
-                Replay
-              </Txt>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.red, paddingHorizontal: 8, height: 24, borderRadius: R.xs, transform: [{ skewX: '-11deg' }] }}>
+              <View style={{ transform: [{ skewX: '11deg' }], flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <LiveDot />
+                <Txt v="micro" color="#FFFFFF">
+                  Replay
+                </Txt>
+              </View>
             </View>
             <Txt v="label" color={series ? accent : C.textDim} style={{ fontSize: 11, flex: 1 }} numberOfLines={1}>
               {series ? series.name : (KIND_LABEL[spec.kind] ?? 'Highlight')}
@@ -262,21 +264,16 @@ export function HighlightPlayer({
             ) : null}
             {onClose ? (
               <Press onPress={onClose} label="Close replay" feedback="tick">
-                <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: withAlpha('#FFFFFF', 0.1) }}>
-                  <Icon name="close" size={16} color={C.text} />
+                <View style={{ width: 44, height: 44, borderRadius: R.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: withAlpha('#FFFFFF', 0.08) }}>
+                  <Icon name="close" size={18} color={C.text} />
                 </View>
               </Press>
             ) : null}
           </View>
-          <Txt v="h1" style={{ marginTop: 8, fontSize: 22, lineHeight: 26 }} numberOfLines={1}>
+          <Text style={{ marginTop: 8, fontFamily: F.display, fontSize: 28, lineHeight: 31, color: C.text, textTransform: 'uppercase' }} numberOfLines={1}>
             {spec.event ?? KIND_LABEL[spec.kind] ?? 'Highlight'}
-            {spec.year ? (
-              <Txt v="h1" color={C.textMute} style={{ fontSize: 22, lineHeight: 26 }}>
-                {'  '}
-                {spec.year}
-              </Txt>
-            ) : null}
-          </Txt>
+            {spec.year ? <Text style={{ color: C.textMute }}>{`  ${spec.year}`}</Text> : null}
+          </Text>
           {context ? (
             <Txt v="small" color={C.textDim} numberOfLines={1}>
               {context}

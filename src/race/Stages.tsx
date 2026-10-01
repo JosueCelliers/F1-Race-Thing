@@ -268,11 +268,14 @@ export function Results({ prep, outcome }: { prep: PreparedRace; outcome: RaceOu
 
         <Animated.View entering={FadeInDown.duration(380)} style={{ paddingHorizontal: S.lg, marginTop: S.lg }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.md }}>
-            <Animated.View
-              entering={ZoomIn.duration(320)}
-              style={{ height: 96, minWidth: 128, paddingHorizontal: 16, backgroundColor: plate, borderRadius: R.xs, transform: [{ skewX: SKEW }], alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Text style={{ transform: [{ skewX: UNSKEW }], fontFamily: F.display, fontSize: dnf ? 50 : 72, lineHeight: 80, color: podium ? '#07090E' : '#FFFFFF' }}>{dnf ? 'DNF' : `P${r.pos}`}</Text>
+            <Animated.View entering={ZoomIn.duration(320)}>
+              <View
+                style={{ height: 96, minWidth: 128, paddingHorizontal: 16, backgroundColor: plate, borderRadius: R.xs, transform: [{ skewX: SKEW }], alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ transform: [{ skewX: UNSKEW }], fontFamily: F.display, fontSize: dnf ? 50 : 72, lineHeight: 80, color: podium ? '#07090E' : '#FFFFFF' }}>
+                  {dnf ? 'DNF' : `P${r.pos}`}
+                </Text>
+              </View>
             </Animated.View>
             <View style={{ flex: 1, gap: 4 }}>
               <Txt v="micro" color={C.textDim}>

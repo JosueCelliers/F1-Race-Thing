@@ -676,9 +676,9 @@ export function Header({ title, sub, onBack, right, back = true, kicker }: { tit
             {kicker}
           </Txt>
         ) : null}
-        <Txt v="h1" numberOfLines={1} style={{ fontSize: 23, lineHeight: 26 }}>
+        <Text style={styles.headerTitle} numberOfLines={1} adjustsFontSizeToFit>
           {title}
-        </Txt>
+        </Text>
         {sub ? (
           <Txt v="small" color={C.textDim} numberOfLines={1} style={{ fontSize: 12.5 }}>
             {sub}
@@ -839,5 +839,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: S.lg,
     paddingTop: S.sm,
     paddingBottom: S.md,
+  },
+  headerTitle: {
+    fontFamily: F.display,
+    fontSize: 28,
+    lineHeight: 31,
+    color: C.text,
+    textTransform: 'uppercase',
   },
 });

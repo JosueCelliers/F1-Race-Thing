@@ -1,6 +1,7 @@
 import { Redirect, router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Modal, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { TeamBadge } from '../art/Badges';
 import { CarSide } from '../art/Car';
@@ -14,9 +15,10 @@ import type { Offer, World } from '../sim/types';
 import { useSession } from '../state/session';
 import { useGame, useWorld } from '../state/store';
 import { haptic } from '../ui/haptics';
-import { Btn, Card, Header, ModalScrim, Pill, Screen, SectionTitle, Stars, Txt } from '../ui/kit';
+import { Btn, Header, ModalScrim, Screen, SectionTitle, SheetModal, Txt } from '../ui/kit';
+import { useScreen } from '../ui/screen';
 import { SpinWheel, type SpinRequest } from '../ui/SpinWheel';
-import { C, R, S, withAlpha } from '../ui/theme';
+import { C, F, R, S, withAlpha } from '../ui/theme';
 
 function perfStars(world: World, teamId: string): number {
   const t = world.teams[teamId];
@@ -27,50 +29,86 @@ function perfStars(world: World, teamId: string): number {
   return Math.max(1, 5 - Math.floor((rank / peers.length) * 5));
 }
 
+function CarRating({ value }: { value: number }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map((k) => (
+        <View key={k} style={{ width: 9, height: 12, backgroundColor: k <= value ? (value >= 5 ? C.gold : value >= 4 ? C.cyan : C.text) : C.surface3, transform: [{ skewX: '-14deg' }] }} />
+      ))}
+    </View>
+  );
+}
+
 function OfferCard({ world, offer, onSign }: { world: World; offer: Offer; onSign: () => void }) {
   const team = world.teams[offer.team];
   const s = seriesDef(offer.series);
   const me = world.drivers[world.active!.driverId];
   const kindLabel = offer.kind === 'renewal' ? (offer.id === 'stay' ? 'Current contract' : 'Renewal') : offer.kind === 'paySeat' ? 'Pay seat' : offer.kind === 'wildcard' ? 'Wildcard' : 'Offer';
-  const kindColor = offer.kind === 'renewal' ? C.green : offer.kind === 'paySeat' ? C.gold : offer.kind === 'wildcard' ? C.purple : C.blue;
+  const kindColor = offer.kind === 'renewal' ? C.green : offer.kind === 'paySeat' ? C.gold : offer.kind === 'wildcard' ? C.purple : C.cyan;
+  const stars = perfStars(world, team.id);
   return (
-    <Card style={{ padding: 0, borderColor: withAlpha(team.colors.primary, 0.6) }}>
-      <View style={{ backgroundColor: withAlpha(team.colors.primary, 0.22), paddingTop: 10, alignItems: 'center' }}>
+    <View style={[panel, { borderColor: withAlpha(team.colors.primary, 0.5) }]}>
+      <View style={{ height: 112, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 6, overflow: 'hidden' }}>
+        <LinearGradient colors={[withAlpha(team.colors.primary, 0.42), withAlpha(team.colors.primary, 0.06)]} style={StyleSheet.absoluteFill} />
         <CarSide carClass={s.carClass} colors={team.colors} livery={team.livery} number={me.number} helmet={me.helmet} width={250} />
-        <View style={{ position: 'absolute', left: 10, top: 10 }}>
-          <Pill label={kindLabel} color={kindColor} />
+        <View
+          style={{
+            position: 'absolute',
+            left: 10,
+            top: 10,
+            height: 24,
+            justifyContent: 'center',
+            paddingHorizontal: 8,
+            backgroundColor: kindColor,
+            transform: [{ skewX: '-11deg' }],
+            borderRadius: R.xs,
+          }}
+        >
+          <Txt v="micro" color="#07090E" style={{ transform: [{ skewX: '11deg' }] }}>
+            {kindLabel}
+          </Txt>
         </View>
       </View>
-      <View style={{ padding: S.lg, gap: 8 }}>
+      <View style={{ padding: 14, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <TeamBadge colors={team.colors} short={team.short} size={36} />
-          <View style={{ flex: 1 }}>
-            <Txt v="h2" numberOfLines={1}>
+          <TeamBadge colors={team.colors} short={team.short} size={38} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ fontFamily: F.title, fontSize: 20, lineHeight: 23, color: C.text, textTransform: 'uppercase' }} numberOfLines={1}>
               {team.name}
-            </Txt>
-            <Txt v="label" color={s.color}>
+            </Text>
+            <Txt v="micro" color={C.textDim}>
               {s.name}
             </Txt>
           </View>
-          <View style={{ alignItems: 'flex-end', gap: 2 }}>
-            <Stars value={perfStars(world, team.id)} size={13} />
-            <Txt v="small" color={C.textMute}>
-              car
+          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+            <CarRating value={stars} />
+            <Txt v="micro" color={C.textMute}>
+              Car
             </Txt>
           </View>
         </View>
-        <Txt v="small" color={C.textDim}>
-          {offer.years} year{offer.years > 1 ? 's' : ''} · {offer.role === 'lead' ? 'Lead driver' : offer.role === 'second' ? 'Second driver' : 'Equal status'} ·{' '}
-          {offer.salary >= 0 ? `$${formatMoney(offer.salary)}/yr` : `Bring $${formatMoney(-offer.salary)}`}
-        </Txt>
+        <View style={{ flexDirection: 'row', borderWidth: 1, borderColor: C.line, borderRadius: R.xs }}>
+          {[
+            ['Years', `${offer.years}`],
+            ['Role', offer.role === 'lead' ? 'Lead' : offer.role === 'second' ? 'Second' : 'Equal'],
+            [offer.salary >= 0 ? 'Salary / yr' : 'You bring', `$${formatMoney(Math.abs(offer.salary))}`],
+          ].map(([l, v], i) => (
+            <View key={l} style={[{ flex: 1, paddingHorizontal: 10, paddingVertical: 7 }, i > 0 && { borderLeftWidth: 1, borderColor: C.line }]}>
+              <Txt v="micro" color={C.textMute}>
+                {l}
+              </Txt>
+              <Text style={{ fontFamily: F.title, fontSize: 18, color: l === 'You bring' ? C.amber : C.text }}>{v}</Text>
+            </View>
+          ))}
+        </View>
         {offer.note ? (
-          <Txt v="small" color={C.textMute}>
+          <Txt v="small" color={C.textDim} style={{ fontSize: 13 }}>
             {offer.note}
           </Txt>
         ) : null}
-        <Btn label="Sign" icon="edit" small onPress={onSign} kind="team" color={team.colors.primary} />
+        <Btn label="Sign" icon="edit" onPress={onSign} kind="team" color={team.colors.primary} />
       </View>
-    </Card>
+    </View>
   );
 }
 
@@ -87,6 +125,7 @@ export default function Offers() {
   const [fateReq, setFateReq] = useState<SpinRequest | null>(null);
   const [fateResult, setFateResult] = useState<Offer | null | undefined>(undefined);
   const [confirmRetire, setConfirmRetire] = useState(false);
+  const { width } = useScreen();
   const a = world?.active;
   const offers = useMemo(() => {
     if (!world || !a) return [];
@@ -140,41 +179,36 @@ export default function Offers() {
   // --------------------------------------------------------------- Hunger wheel
   if (hunger && !hungerDone && !isFarewell(world)) {
     const slices: WheelSlice[] = [
-      { id: 'stay', label: 'One more year', weight: hunger.stay, color: '#24D17E', value: 0 },
-      { id: 'retire', label: 'Hang up the helmet', weight: hunger.retire, color: '#FF3B5C', value: 1 },
+      { id: 'stay', label: 'One more year', weight: hunger.stay, color: C.green, value: 0 },
+      { id: 'retire', label: 'Hang up the helmet', weight: hunger.retire, color: C.red, value: 1 },
     ];
+    const spinHunger = () => {
+      if (hungerReq) return;
+      const rng = new Rng(mixSeed(world.seed, 'hunger', world.year));
+      setHungerReq({ id: Date.now(), target: hunger.forced ? 1 : rng.weightedIndex(slices.map((x) => x.weight)) });
+    };
     return (
-      <Screen header={<Header title="One more year?" sub={`Age ${ageOf(me, world.year + 1)} next season`} back={false} />}>
-        <Txt v="body" color={C.textDim} center style={{ marginTop: S.md }}>
+      <Screen
+        scroll={false}
+        header={<Header kicker={`Age ${ageOf(me, world.year + 1)} next season`} title="One more year?" back={false} />}
+        footer={<Btn label="Spin" icon="refresh" disabled={!!hungerReq} onPress={spinHunger} />}
+      >
+        <Txt v="body" color={C.text} center style={{ marginTop: S.sm }}>
           {hunger.forced ? 'Your body has made the decision for you.' : 'The hunger is fading. Let the wheel decide if you still have it.'}
         </Txt>
-        <View style={{ alignItems: 'center', marginTop: S.lg }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <SpinWheel
             slices={slices}
-            size={300}
+            size={Math.min(width - 32, 360)}
             request={hungerReq}
             hubLabel="FATE"
-            onPressHub={() => {
-              if (hungerReq) return;
-              const rng = new Rng(mixSeed(world.seed, 'hunger', world.year));
-              setHungerReq({ id: Date.now(), target: hunger.forced ? 1 : rng.weightedIndex(slices.map((x) => x.weight)) });
-            }}
+            onPressHub={spinHunger}
             onDone={(i) => {
               if (i === 1) setTimeout(() => retire(hunger.forced ? 'Forced to retire by age.' : 'The wheel said it was time.'), 900);
               else setTimeout(() => setHungerDone(true), 900);
             }}
           />
         </View>
-        <Btn
-          label="Spin"
-          icon="refresh"
-          style={{ marginTop: S.lg }}
-          disabled={!!hungerReq}
-          onPress={() => {
-            const rng = new Rng(mixSeed(world.seed, 'hunger', world.year));
-            setHungerReq({ id: Date.now(), target: hunger.forced ? 1 : rng.weightedIndex(slices.map((x) => x.weight)) });
-          }}
-        />
       </Screen>
     );
   }
@@ -182,7 +216,7 @@ export default function Offers() {
   // --------------------------------------------------------------- Offers
   return (
     <Screen
-      header={<Header title="Contract offers" sub={`${world.year + 1} season · ${offers.length} option${offers.length === 1 ? '' : 's'}`} back={false} />}
+      header={<Header kicker={`${world.year + 1} season · ${offers.length} option${offers.length === 1 ? '' : 's'}`} title="Contract offers" back={false} />}
       footer={
         <View style={{ gap: S.sm }}>
           <Btn label="Spin the Wheel of Fate" icon="dice" kind="gold" onPress={openFate} sub="Let the wheel choose your future" />
@@ -190,27 +224,30 @@ export default function Offers() {
       }
     >
       {isFarewell(world) ? (
-        <Card style={{ marginTop: S.md, borderColor: withAlpha(C.gold, 0.5) }} accent={C.gold}>
-          <Txt v="label" color={C.gold}>
+        <View style={[panel, notice, { borderColor: withAlpha(C.gold, 0.45), marginTop: S.sm }]}>
+          <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: C.gold }} />
+          <Txt v="micro" color={C.gold}>
             Farewell season complete
           </Txt>
-          <Txt v="h1" style={{ marginTop: 4 }}>
-            Time to hang up the helmet?
-          </Txt>
-          <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+          <Text style={heading}>Time to hang up the helmet?</Text>
+          <Txt v="body" color={C.textDim}>
             You promised {world.year} would be your last year. The paddock has its farewells ready, but these teams still want you.
           </Txt>
-          <Btn label="Retire" icon="flag" kind="gold" style={{ marginTop: S.md }} onPress={() => retire('Retired after a farewell season.')} />
-        </Card>
+          <Btn label="Retire" icon="flag" kind="gold" small style={{ marginTop: S.sm }} onPress={() => retire('Retired after a farewell season.')} />
+        </View>
       ) : null}
       {offers.length === 0 ? (
-        <Card style={{ marginTop: S.md }} accent={C.red}>
-          <Txt v="h1">The phone isn’t ringing</Txt>
-          <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+        <View style={[panel, notice, { borderColor: withAlpha(C.red, 0.45), marginTop: S.sm }]}>
+          <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: C.red }} />
+          <Txt v="micro" color={C.red}>
+            No offers
+          </Txt>
+          <Text style={heading}>The phone isn’t ringing</Text>
+          <Txt v="body" color={C.textDim}>
             No team wants you for {world.year + 1}. Sit out a year and hope, spin for a miracle, or call it a career.
           </Txt>
-          <Btn label="Sit out a year" kind="secondary" small style={{ marginTop: S.md }} onPress={() => sign(null)} />
-        </Card>
+          <Btn label="Sit out a year" kind="secondary" small style={{ marginTop: S.sm }} onPress={() => sign(null)} />
+        </View>
       ) : null}
       <View style={{ gap: S.md, marginTop: S.md }}>
         {offers.map((o, i) => (
@@ -219,36 +256,30 @@ export default function Offers() {
           </Animated.View>
         ))}
       </View>
-      <SectionTitle title="Or..." />
+      <SectionTitle title="Or" style={{ marginBottom: S.sm }} />
       <Btn label="Retire from racing" icon="flag" kind="ghost" onPress={() => setConfirmRetire(true)} />
 
-      <Modal visible={confirmRetire} transparent animationType="fade" onRequestClose={() => setConfirmRetire(false)}>
-        <ModalScrim bg="rgba(2,4,10,0.85)">
-          <Card>
-            <Txt v="h1">Retire now?</Txt>
-            <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
-              Your career will be sealed in the Archive and the world moves on.
-            </Txt>
-            <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
-              <Btn label="Not yet" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmRetire(false)} />
-              <Btn label="Retire" kind="danger" small style={{ flex: 1 }} onPress={() => retire('Walked away on their own terms.')} />
-            </View>
-          </Card>
-        </ModalScrim>
-      </Modal>
+      <SheetModal visible={confirmRetire} onClose={() => setConfirmRetire(false)} accent={C.redDeep}>
+        <Txt v="h1">Retire now?</Txt>
+        <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+          Your career will be sealed in the Archive and the world moves on.
+        </Txt>
+        <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
+          <Btn label="Not yet" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmRetire(false)} />
+          <Btn label="Retire" kind="danger" small style={{ flex: 1 }} onPress={() => retire('Walked away on their own terms.')} />
+        </View>
+      </SheetModal>
 
       <Modal visible={!!fate} transparent animationType="fade" onRequestClose={() => setFate(null)}>
-        <ModalScrim bg="rgba(2,4,10,0.9)" center>
-          <Txt v="title" center>
-            Wheel of Fate
+        <ModalScrim bg="rgba(3,4,8,0.94)" center>
+          <Txt v="micro" color={C.gold}>
+            Wherever it lands, you sign
           </Txt>
-          <Txt v="small" color={C.textDim} center style={{ marginBottom: S.lg }}>
-            Wherever it lands, you sign.
-          </Txt>
+          <Text style={[heading, { fontSize: 34, lineHeight: 38, marginBottom: S.lg }]}>Wheel of Fate</Text>
           {fate ? (
             <SpinWheel
               slices={fate.slices}
-              size={320}
+              size={Math.min(width - 40, 340)}
               request={fateReq}
               hubLabel="FATE"
               onDone={(i) => {
@@ -258,20 +289,18 @@ export default function Offers() {
             />
           ) : null}
           {fateResult !== undefined && fate ? (
-            <Animated.View entering={ZoomIn.springify().damping(14)} style={{ marginTop: S.lg, alignSelf: 'stretch', gap: S.sm }}>
-              <Card style={{ alignItems: 'center', borderRadius: R.lg }}>
-                <Txt v="label" color={C.gold}>
+            <Animated.View entering={ZoomIn.duration(260)} style={{ marginTop: S.lg, alignSelf: 'stretch', gap: S.sm }}>
+              <View style={[panel, { alignItems: 'center', padding: 14, borderColor: withAlpha(C.gold, 0.45) }]}>
+                <Txt v="micro" color={C.gold}>
                   Fate has spoken
                 </Txt>
-                <Txt v="h1" center style={{ marginTop: 4 }}>
-                  {fateResult ? `${world.teams[fateResult.team].name}` : 'A year on the sidelines'}
-                </Txt>
+                <Text style={[heading, { textAlign: 'center' }]}>{fateResult ? `${world.teams[fateResult.team].name}` : 'A year on the sidelines'}</Text>
                 {fateResult ? (
                   <Txt v="small" color={C.textDim}>
                     {seriesDef(fateResult.series).name}
                   </Txt>
                 ) : null}
-              </Card>
+              </View>
               <Btn label="Sign it" icon="check" kind="gold" onPress={() => sign(fateResult)} />
             </Animated.View>
           ) : null}
@@ -280,3 +309,12 @@ export default function Offers() {
     </Screen>
   );
 }
+
+const st = StyleSheet.create({
+  panel: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, borderRadius: R.sm, overflow: 'hidden' },
+  notice: { paddingLeft: 15, paddingRight: 12, paddingVertical: 12, gap: 4 },
+  heading: { fontFamily: F.title, fontSize: 22, lineHeight: 25, color: C.text, textTransform: 'uppercase' },
+});
+const panel = st.panel;
+const notice = st.notice;
+const heading = st.heading;

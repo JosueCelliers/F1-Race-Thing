@@ -1,39 +1,64 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Flag } from '../art/Flag';
 import { SERIES, series as seriesDef, SPECIAL_EVENTS } from '../content/series';
 import { fullName } from '../sim/drivers';
 import { useWorld } from '../state/store';
-import { Card, Header, Press, Screen, SectionTitle, Txt } from '../ui/kit';
+import { Icon } from '../ui/Icon';
+import { Header, Press, Screen, SectionTitle, Txt } from '../ui/kit';
 import { Segmented } from '../ui/Segmented';
 import { StandingsTable, TeamStandingsTable } from '../ui/Standings';
-import { C, R, S, withAlpha } from '../ui/theme';
+import { C, F, R, S, withAlpha } from '../ui/theme';
 
 type Tab = 'champions' | 'standings' | 'legends' | 'news';
 
+/** Championship selector: neutral plates, the selected one lit in its series colour. */
 function SeriesChips({ value, onChange }: { value: string; onChange: (s: string) => void }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: S.md }} contentContainerStyle={{ gap: 6 }}>
-      {SERIES.map((s) => (
-        <Press key={s.id} onPress={() => onChange(s.id)} feedback="tick">
-          <View
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: R.pill,
-              backgroundColor: value === s.id ? s.color : C.surface,
-              borderWidth: 1,
-              borderColor: value === s.id ? s.color : C.line,
-            }}
-          >
-            <Txt v="label" color={value === s.id ? '#FFFFFF' : C.textDim}>
-              {s.short}
-            </Txt>
-          </View>
-        </Press>
-      ))}
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: S.md, marginHorizontal: -S.lg }} contentContainerStyle={{ gap: 6, paddingHorizontal: S.lg }}>
+      {SERIES.map((s) => {
+        const on = value === s.id;
+        return (
+          <Press key={s.id} onPress={() => onChange(s.id)} feedback="tick" label={s.name}>
+            <View
+              style={{
+                height: 40,
+                justifyContent: 'center',
+                paddingHorizontal: 14,
+                backgroundColor: on ? s.color : C.surface,
+                borderWidth: 1,
+                borderColor: on ? s.color : C.line,
+                borderRadius: R.xs,
+                transform: [{ skewX: '-11deg' }],
+              }}
+            >
+              <View style={{ transform: [{ skewX: '11deg' }], flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {!on ? <View style={{ width: 3, height: 12, backgroundColor: s.color }} /> : null}
+                <Txt v="label" color={on ? '#FFFFFF' : C.textDim}>
+                  {s.short}
+                </Txt>
+              </View>
+            </View>
+          </Press>
+        );
+      })}
     </ScrollView>
+  );
+}
+
+function Row({ children, first, mine }: { children: React.ReactNode; first: boolean; mine?: boolean }) {
+  return (
+    <View
+      style={[
+        { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, paddingRight: 12, paddingVertical: 6 },
+        !first && { borderTopWidth: 1, borderColor: C.line },
+        mine && { backgroundColor: withAlpha(C.gold, 0.08) },
+      ]}
+    >
+      <View style={{ width: 3, alignSelf: 'stretch', marginVertical: -6, backgroundColor: mine ? C.gold : 'transparent' }} />
+      {children}
+    </View>
   );
 }
 
@@ -69,7 +94,7 @@ export default function WorldScreen() {
   const playerId = world.active?.driverId;
 
   return (
-    <Screen header={<Header title="The World" sub={`Season ${world.year}`} />}>
+    <Screen header={<Header kicker={`Season ${world.year} · ${SERIES.length} championships`} title="The World" />} tint={C.cyan} backdrop={{ intensity: 0.6 }}>
       <Segmented
         value={tab}
         onChange={setTab}
@@ -87,33 +112,28 @@ export default function WorldScreen() {
           <Txt v="small" color={C.textDim} style={{ marginTop: S.md }}>
             {s.description}
           </Txt>
-          <Card padded={false} style={{ marginTop: S.md, padding: 8 }}>
+          <View style={[panel, { marginTop: S.md }]}>
             {champs.length === 0 ? (
-              <Txt v="small" color={C.textMute} style={{ padding: 8 }}>
+              <Txt v="small" color={C.textMute} style={{ padding: 12 }}>
                 No champions yet.
               </Txt>
             ) : null}
-            {champs.map((c) => (
-              <View
-                key={`${c.year}`}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, backgroundColor: c.isPlayer ? withAlpha(C.gold, 0.14) : 'transparent' }}
-              >
-                <Txt v="num" color={C.textDim} style={{ width: 44 }}>
-                  {c.year}
-                </Txt>
+            {champs.map((c, i) => (
+              <Row key={`${c.year}`} first={i === 0} mine={c.isPlayer}>
+                <Text style={{ width: 46, fontFamily: F.title, fontSize: 16, color: C.textDim }}>{c.year}</Text>
                 <Flag id={c.nation} width={20} />
-                <View style={{ flex: 1 }}>
-                  <Txt v="bodyStrong" numberOfLines={1}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt v="bodyStrong" numberOfLines={1} color={c.isPlayer ? C.gold : C.text} style={{ fontSize: 14.5 }}>
                     {c.driverName}
-                    {c.isPlayer ? ' ★' : ''}
                   </Txt>
-                  <Txt v="small" color={C.textMute} numberOfLines={1}>
+                  <Txt v="small" color={C.textMute} numberOfLines={1} style={{ fontSize: 12.5 }}>
                     {c.teamName} · {c.wins} win{c.wins === 1 ? '' : 's'} · {c.points} pts
                   </Txt>
                 </View>
-              </View>
+                {c.isPlayer ? <Icon name="star" size={15} color={C.gold} fill={C.gold} /> : null}
+              </Row>
             ))}
-          </Card>
+          </View>
           <SectionTitle title="Crown jewels" />
           {SPECIAL_EVENTS.map((sp) => {
             const wins = world.specialWinners
@@ -121,29 +141,29 @@ export default function WorldScreen() {
               .sort((a, b) => b.year - a.year)
               .slice(0, 5);
             return (
-              <Card key={sp.id} style={{ marginBottom: S.sm }}>
-                <Txt v="h3">
-                  {sp.emoji} {sp.name}
-                </Txt>
+              <View key={sp.id} style={[panel, { marginBottom: S.sm }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6 }}>
+                  <Icon name="trophy" size={16} color={C.gold} strokeWidth={2.2} />
+                  <Text style={{ fontFamily: F.title, fontSize: 17, color: C.text, textTransform: 'uppercase', flex: 1 }} numberOfLines={1}>
+                    {sp.name}
+                  </Text>
+                </View>
                 {wins.length === 0 ? (
-                  <Txt v="small" color={C.textMute}>
+                  <Txt v="small" color={C.textMute} style={{ paddingHorizontal: 12, paddingBottom: 10 }}>
                     Not yet run.
                   </Txt>
                 ) : (
                   wins.map((w) => (
-                    <View key={`${w.year}-${w.driverId}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                      <Txt v="small" color={C.textDim} style={{ width: 40 }}>
-                        {w.year}
-                      </Txt>
+                    <View key={`${w.year}-${w.driverId}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, minHeight: 32, borderTopWidth: 1, borderColor: C.line }}>
+                      <Text style={{ width: 40, fontFamily: F.heading, fontSize: 13, color: C.textDim }}>{w.year}</Text>
                       <Flag id={w.nation} width={16} />
-                      <Txt v="small" color={w.isPlayer ? C.gold : C.text} numberOfLines={1} style={{ flex: 1 }}>
-                        {w.driverName}
-                        {w.isPlayer ? ' ★' : ''} · {w.teamName}
+                      <Txt v="small" color={w.isPlayer ? C.gold : C.text} numberOfLines={1} style={{ flex: 1, fontSize: 13 }}>
+                        {w.driverName} · {w.teamName}
                       </Txt>
                     </View>
                   ))
                 )}
-              </Card>
+              </View>
             );
           })}
         </Animated.View>
@@ -151,64 +171,61 @@ export default function WorldScreen() {
 
       {tab === 'standings' ? (
         <Animated.View entering={FadeIn}>
-          <SectionTitle title={`${s.name} ${world.season.year}`} />
-          <Card padded={false} style={{ padding: 6 }}>
+          <SectionTitle title={`${s.name} ${world.season.year}`} style={{ marginBottom: S.sm }} />
+          <View style={panel}>
             <StandingsTable world={world} seriesId={sid} highlight={playerId} />
-          </Card>
-          <SectionTitle title="Teams" />
-          <Card padded={false} style={{ padding: 6 }}>
+          </View>
+          <SectionTitle title="Teams" style={{ marginBottom: S.sm }} />
+          <View style={panel}>
             <TeamStandingsTable world={world} seriesId={sid} />
-          </Card>
+          </View>
         </Animated.View>
       ) : null}
 
       {tab === 'legends' ? (
         <Animated.View entering={FadeIn} style={{ marginTop: S.md }}>
           <Txt v="small" color={C.textDim}>
-            The greatest drivers in the history of this universe — AI and yours alike (★).
+            The greatest drivers in the history of this universe, AI and yours alike. Yours are in gold.
           </Txt>
-          <Card padded={false} style={{ marginTop: S.md, padding: 8 }}>
+          <View style={[panel, { marginTop: S.md }]}>
             {legends.map((x, i) => (
-              <View key={x.d.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8, borderRadius: 10, backgroundColor: x.d.careerId ? withAlpha(C.gold, 0.12) : 'transparent' }}>
-                <Txt v="num" style={{ width: 24 }} color={i < 3 ? C.gold : C.textDim}>
-                  {i + 1}
-                </Txt>
+              <Row key={x.d.id} first={i === 0} mine={!!x.d.careerId}>
+                <Text style={{ width: 26, fontFamily: F.display, fontSize: 19, color: i < 3 ? C.gold : C.textDim, textAlign: 'center' }}>{i + 1}</Text>
                 <Flag id={x.d.nation} width={20} />
-                <View style={{ flex: 1 }}>
-                  <Txt v="bodyStrong" numberOfLines={1}>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Txt v="bodyStrong" numberOfLines={1} color={x.d.careerId ? C.gold : C.text} style={{ fontSize: 14.5 }}>
                     {fullName(x.d)}
-                    {x.d.careerId ? ' ★' : ''}
                   </Txt>
-                  <Txt v="small" color={C.textMute}>
+                  <Txt v="small" color={C.textMute} style={{ fontSize: 12.5 }}>
                     {legendLine(x.titles, x.primeTitles, x.wins)} · {x.d.status === 'retired' ? 'retired' : 'active'}
                   </Txt>
                 </View>
-              </View>
+                {x.d.careerId ? <Icon name="star" size={15} color={C.gold} fill={C.gold} /> : null}
+              </Row>
             ))}
-          </Card>
+          </View>
         </Animated.View>
       ) : null}
 
       {tab === 'news' ? (
-        <Animated.View entering={FadeIn} style={{ marginTop: S.md, gap: 6 }}>
+        <Animated.View entering={FadeIn} style={{ marginTop: S.md }}>
           {world.news.length === 0 ? (
             <Txt v="small" color={C.textMute}>
               Nothing yet.
             </Txt>
           ) : null}
-          {world.news.map((n) => (
-            <View
-              key={n.id}
-              style={{ flexDirection: 'row', gap: 10, backgroundColor: C.surface, borderRadius: R.md, padding: 12, borderWidth: 1, borderColor: n.important ? withAlpha(C.gold, 0.4) : C.line }}
-            >
-              <Txt v="num" color={C.textDim} style={{ width: 40, fontSize: 14 }}>
-                {n.year}
-              </Txt>
-              <Txt v="small" color={n.important ? C.text : C.textDim} style={{ flex: 1 }}>
-                {n.text}
-              </Txt>
+          {world.news.length ? (
+            <View style={panel}>
+              {world.news.map((n, i) => (
+                <Row key={n.id} first={i === 0} mine={n.important}>
+                  <Text style={{ width: 42, fontFamily: F.title, fontSize: 15, color: C.textDim }}>{n.year}</Text>
+                  <Txt v="small" color={n.important ? C.text : C.textDim} style={{ flex: 1, fontSize: 13.5 }}>
+                    {n.text}
+                  </Txt>
+                </Row>
+              ))}
             </View>
-          ))}
+          ) : null}
         </Animated.View>
       ) : null}
     </Screen>
@@ -221,3 +238,5 @@ function legendLine(titles: number, prime: number, wins: number): string {
   parts.push(`${wins} win${wins === 1 ? '' : 's'}`);
   return parts.join(' · ');
 }
+
+const panel = StyleSheet.create({ p: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.line, borderRadius: R.sm, overflow: 'hidden' } }).p;

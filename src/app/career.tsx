@@ -1,29 +1,31 @@
+/**
+ * The career hub: who you are, what's next, where you stand. The next race is
+ * an event poster; the race button lives in the thumb zone.
+ */
 import { Redirect, router, useIsFocused } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Modal, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
-import { Flag } from '../art/Flag';
-import { Portrait } from '../art/Portrait';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { series as seriesDef, SPECIAL_MAP } from '../content/series';
-import { family, personality } from '../content/traits';
+import { DriverFile } from '../hub/DriverFile';
+import { ActionDock, ChampionshipStrip, DockBtn, DriverHud, EventPoster, LastRaceStrip, QuickResultSheet, RivalStrip, TeamPanel } from '../hub/Parts';
 import { playRaceInstant } from '../sim/autoplay';
 import { answerInvite, dueInvite, forecast, nextRaceMeta, setFarewell, simulateReserveSeason, type RaceOutcome } from '../sim/career';
-import { ageOf, fullName, ovr, totalStats } from '../sim/drivers';
+import { ageOf, ovr, totalStats } from '../sim/drivers';
 import { resolveLifeEvent, topRival } from '../sim/events';
-import type { LifeEventInstance } from '../sim/types';
 import { formatMoney } from '../sim/market';
 import { mixSeed, Rng } from '../sim/rng';
 import { standings } from '../sim/season';
+import type { LifeEventInstance } from '../sim/types';
 import { useGame, useWorld } from '../state/store';
-import { DriverCard, OvrBadge } from '../ui/DriverCard';
 import { haptic } from '../ui/haptics';
-import { Icon } from '../ui/Icon';
-import { Btn, Card, Header, IconBtn, ModalScrim, Pill, PosBadge, Screen, SectionTitle, StatBar, Txt } from '../ui/kit';
+import { Icon, type IconName } from '../ui/Icon';
+import { Backdrop, Btn, IconBtn, SectionTitle, SheetModal, StatCell, Txt } from '../ui/kit';
 import { LifeEventSheet } from '../ui/LifeEventSheet';
-import { LastResultCard, NextRaceCard } from '../ui/RaceCards';
 import { Segmented } from '../ui/Segmented';
 import { StandingsTable, TeamStandingsTable } from '../ui/Standings';
-import { C, F, luminance, R, S, withAlpha } from '../ui/theme';
+import { C, F, R, S, withAlpha } from '../ui/theme';
 import { CareerTimeline } from '../ui/Timeline';
 
 type Tab = 'season' | 'standings' | 'career' | 'driver';
@@ -38,6 +40,7 @@ export default function CareerHub() {
   const [confirmFarewell, setConfirmFarewell] = useState(false);
   // Modals render above every screen, so only show ours while the hub is in front.
   const focused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const a = world?.active;
   const me = a ? world!.drivers[a.driverId] : undefined;
   const meta = useMemo(() => (world && a ? nextRaceMeta(world) : null), [world, a, a?.raceCount, a?.phase, world?.season.year]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,268 +70,183 @@ export default function CareerHub() {
     setQuick(out);
   };
 
+  // What the thumb zone offers depends on where the season is.
+  let dock: React.ReactNode = null;
+  let note: string | undefined;
+  if (a.phase === 'season' && meta) {
+    note = pendingInvite ? 'Answer the invitation first' : a.pendingEvent ? 'Something in the paddock needs you first' : undefined;
+    dock = (
+      <>
+        <Btn label="Watch the race" icon="play" sub="Live broadcast · your calls" onPress={() => router.push('/race?mode=watch')} disabled={blocked} style={{ flex: 1 }} testID="watch-race" />
+        <DockBtn icon="skip" label="Quick result" onPress={quickRace} disabled={blocked} testID="quick-result" />
+      </>
+    );
+  } else if (a.phase === 'season' && !meta && !me.contract) {
+    dock = <Btn label="Simulate the season" icon="ff" sub="Watch from the sidelines" onPress={() => mutate((w) => simulateReserveSeason(w))} style={{ flex: 1 }} />;
+  } else if (a.phase === 'seasonEnd' || a.phase === 'offers') {
+    dock = (
+      <Btn label={a.phase === 'offers' ? 'View offers' : 'Season review'} icon="trophy" kind="gold" onPress={() => router.push(a.phase === 'offers' ? '/offers' : '/season')} style={{ flex: 1 }} />
+    );
+  }
+
   return (
-    <Screen
-      tint={team?.colors.primary}
-      header={<Header title={`${world.year} season`} sub={s ? s.name : 'Without a seat'} onBack={() => router.replace('/')} right={<IconBtn icon="home" onPress={() => router.replace('/')} />} />}
-    >
-      {/* Driver strip */}
-      <Card style={{ padding: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Portrait looks={me.looks} gender={me.gender} suit={team?.colors} size={64} age={age} />
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Flag id={me.nation} width={20} />
-              <Txt v="h2" numberOfLines={1} style={{ flex: 1 }}>
-                {fullName(me)}
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <Backdrop tint={team?.colors.primary ?? C.red} intensity={0.7} />
+      {/* Status-bar spacer outside the scroll view, so the sticky tabs stop below it. */}
+      <View style={{ height: insets.top }} />
+      <ScrollView style={{ flex: 1 }} stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: S.xl }} showsVerticalScrollIndicator={false}>
+        <View style={{ paddingHorizontal: S.lg, paddingTop: S.sm, gap: S.md }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: S.sm }}>
+            <IconBtn icon="home" label="Home" onPress={() => router.replace('/')} />
+            <View style={{ flex: 1 }}>
+              <Txt v="micro" color={C.red}>
+                {world.year} season
               </Txt>
+              <Text style={hubStyles.title} numberOfLines={1} adjustsFontSizeToFit>
+                {s ? s.name : 'Without a seat'}
+              </Text>
             </View>
-            <Txt v="small" color={C.textDim} numberOfLines={1}>
-              Age {age} · {team ? team.name : 'Free agent'}
-            </Txt>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
-              <Stat icon="heart" value={`${Math.round(me.morale)}`} label="morale" color={me.morale > 60 ? C.green : me.morale > 35 ? C.gold : C.red} />
-              <Stat icon="fans" value={fmtFans(me.fans)} label="fans" color={C.cyan} />
-              <Stat icon="money" value={`$${formatMoney(a.money)}`} label="" color={C.gold} />
-            </View>
+            <IconBtn icon="globe" label="World" onPress={() => router.push('/world')} />
           </View>
-          <OvrBadge ovr={ovr(me)} size={0.85} />
+          <DriverHud me={me} team={team} age={age} rating={ovr(me)} money={`$${formatMoney(a.money)}`} />
         </View>
-      </Card>
 
-      <View style={{ marginTop: S.md }}>
-        <Segmented<Tab>
-          value={tab}
-          onChange={setTab}
-          options={[
-            { id: 'season', label: 'Season' },
-            { id: 'standings', label: 'Standings' },
-            { id: 'career', label: 'Career' },
-            { id: 'driver', label: 'Driver' },
-          ]}
-        />
-      </View>
-
-      {tab === 'season' ? (
-        <Animated.View entering={FadeIn.duration(250)}>
-          {a.injury && a.injury.racesOut > 0 ? (
-            <Card style={{ marginTop: S.md }} accent={C.red}>
-              <Txt v="label" color={C.red}>
-                Injured
-              </Txt>
-              <Txt v="body" style={{ marginTop: 4 }}>
-                {a.injury.desc}: out for {a.injury.racesOut} more race{a.injury.racesOut > 1 ? 's' : ''}. A reserve driver takes your seat.
-              </Txt>
-            </Card>
-          ) : null}
-
-          {pendingInvite ? (
-            <Animated.View entering={ZoomIn.springify().damping(14)}>
-              <Card style={{ marginTop: S.md, borderColor: withAlpha(C.purple, 0.6) }} accent={C.purple}>
-                <Txt v="label" color={C.purple}>
-                  ✉️ Special invitation
-                </Txt>
-                <Txt v="h1" style={{ marginTop: 4 }}>
-                  {SPECIAL_MAP[pendingInvite.special ?? '']?.name ?? 'One-off race'}
-                </Txt>
-                <Txt v="body" color={C.textDim} style={{ marginTop: 4 }}>
-                  {world.teams[pendingInvite.team].name} want you for a one-off drive in the {seriesDef(pendingInvite.series).name}. {SPECIAL_MAP[pendingInvite.special ?? '']?.description ?? ''}
-                </Txt>
-                <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.md }}>
-                  <Btn label="Accept" icon="check" small style={{ flex: 1 }} onPress={() => mutate((w) => answerInvite(w, pendingInvite.id, true))} />
-                  <Btn label="Decline" kind="ghost" small style={{ flex: 1 }} onPress={() => mutate((w) => answerInvite(w, pendingInvite.id, false))} />
-                </View>
-              </Card>
-            </Animated.View>
-          ) : null}
-
-          {a.phase === 'season' && meta ? (
-            <Animated.View entering={FadeInDown.duration(350)} style={{ marginTop: S.md }}>
-              <NextRaceCard
-                meta={meta}
-                forecast={fc}
-                disabled={blocked}
-                onWatch={() => router.push('/race?mode=watch')}
-                onHighlights={() => router.push('/race?mode=highlights')}
-                onQuick={quickRace}
-              />
-            </Animated.View>
-          ) : null}
-
-          {a.phase === 'season' && !meta && !me.contract ? (
-            <Card style={{ marginTop: S.md }}>
-              <Txt v="h1">No race seat this year</Txt>
-              <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
-                You’re on the sidelines, working the simulator and waiting for a call. The season will go on without you.
-              </Txt>
-              <Btn label="Simulate the season" icon="ff" style={{ marginTop: S.md }} onPress={() => mutate((w) => simulateReserveSeason(w))} />
-            </Card>
-          ) : null}
-
-          {a.phase === 'seasonEnd' || a.phase === 'offers' ? (
-            <Card style={{ marginTop: S.md, borderColor: withAlpha(C.gold, 0.5) }} accent={C.gold}>
-              <Txt v="label" color={C.gold}>
-                Season complete
-              </Txt>
-              <Txt v="h1" style={{ marginTop: 4 }}>
-                {a.phase === 'offers' ? 'Your future awaits' : `The ${world.year} season is over`}
-              </Txt>
-              <Btn
-                label={a.phase === 'offers' ? 'View offers' : 'Season review'}
-                icon="trophy"
-                kind="gold"
-                style={{ marginTop: S.md }}
-                onPress={() => router.push(a.phase === 'offers' ? '/offers' : '/season')}
-              />
-            </Card>
-          ) : null}
-
-          {a.lastResult ? (
-            <View style={{ marginTop: S.md }}>
-              <LastResultCard r={a.lastResult} />
-            </View>
-          ) : null}
-
-          {s && ss ? (
-            <>
-              <SectionTitle title="Championship" right={<Pill label={ss.round === 0 ? `${ss.calendar.length} rounds` : `P${myPos || '-'} · ${myPts} pts`} color={C.surface3} />} />
-              <Card padded={false} style={{ padding: 6 }}>
-                <StandingsTable world={world} seriesId={s.id} highlight={me.id} limit={6} compact />
-              </Card>
-              {myPos > 1 && ss.round > 0 ? (
-                <Txt v="small" color={C.textDim} style={{ marginTop: 6, textAlign: 'center' }}>
-                  {leaderPts - myPts} points behind the leader · {ss.calendar.length - ss.round} round{ss.calendar.length - ss.round === 1 ? '' : 's'} left
-                </Txt>
-              ) : null}
-            </>
-          ) : null}
-
-          {team ? (
-            <>
-              <SectionTitle title="Team" />
-              <Card>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Txt v="h2">{team.name}</Txt>
-                  <Pill label={me.contract ? `Contract to ${me.contract.until}` : ''} color={C.surface3} />
-                </View>
-                <Txt v="small" color={C.textDim} style={{ marginTop: 2 }}>
-                  Team principal: {team.principal.name}
-                  {team.principal.driverId && world.drivers[team.principal.driverId]?.careerId ? ' (a former driver of yours!)' : ''}
-                </Txt>
-                <View style={{ gap: 10, marginTop: S.md }}>
-                  <StatBar label="Car performance" value={team.perf} color={visibleColor(team.colors.primary, team.colors.secondary)} />
-                  <StatBar label="Relationship with team" value={a.teamRelation} color={C.green} />
-                  <StatBar label="Relationship with teammate" value={a.teammateRelation} color={C.blue} />
-                </View>
-              </Card>
-            </>
-          ) : null}
-
-          {rival ? (
-            <>
-              <SectionTitle title="Rival" />
-              <Card accent={C.red}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Portrait looks={rival.looks} gender={rival.gender} suit={rival.contract ? world.teams[rival.contract.team]?.colors : undefined} size={52} />
-                  <View style={{ flex: 1 }}>
-                    <Txt v="h3">{fullName(rival)}</Txt>
-                    <Txt v="small" color={C.textDim}>
-                      {a.rivals[rival.id]?.battles ?? 0} battles · {a.rivals[rival.id]?.incidents ?? 0} incidents
-                    </Txt>
-                  </View>
-                  <Icon name="fire" color={C.red} />
-                </View>
-              </Card>
-            </>
-          ) : null}
-        </Animated.View>
-      ) : null}
-
-      {tab === 'standings' && s ? (
-        <Animated.View entering={FadeIn.duration(250)}>
-          <SectionTitle title={`${s.name} drivers`} />
-          <Card padded={false} style={{ padding: 6 }}>
-            <StandingsTable world={world} seriesId={s.id} highlight={me.id} />
-          </Card>
-          <SectionTitle title="Teams" />
-          <Card padded={false} style={{ padding: 6 }}>
-            <TeamStandingsTable world={world} seriesId={s.id} highlight={team?.id} />
-          </Card>
-          <Btn label="Other championships" icon="globe" kind="secondary" small style={{ marginTop: S.lg }} onPress={() => router.push('/world')} />
-        </Animated.View>
-      ) : null}
-
-      {tab === 'career' ? (
-        <Animated.View entering={FadeIn.duration(250)}>
-          <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.md }}>
-            <Big label="Starts" value={tot.starts} />
-            <Big label="Wins" value={tot.wins} color={C.gold} />
-            <Big label="Podiums" value={tot.podiums} />
-            <Big label="Titles" value={tot.titles} color={C.gold} />
-          </View>
-          <CareerTimeline seasons={a.seasons} moments={a.moments} current={s ? { year: world.year, series: s.id, teamName: team?.name ?? '', pos: myPos, pts: myPts } : undefined} />
-        </Animated.View>
-      ) : null}
-
-      {tab === 'driver' ? (
-        <Animated.View entering={FadeIn.duration(250)} style={{ marginTop: S.md, gap: S.md }}>
-          <DriverCard
-            d={{
-              first: me.first,
-              last: me.last,
-              nation: me.nation,
-              gender: me.gender,
-              looks: me.looks,
-              age,
-              ovr: ovr(me),
-              skills: me.skills,
-              number: me.number,
-              teamName: team?.name,
-              seriesName: s?.name,
-              tags: [
-                { label: `${personality(me.personality).emoji} ${personality(me.personality).label}` },
-                { label: `${family(me.family).emoji} ${family(me.family).label}` },
-                { label: `🔥 Aggression ${Math.round(me.aggression)}` },
-                { label: `⭐ Reputation ${Math.round(me.reputation)}` },
-              ],
-            }}
-            colors={team?.colors}
+        <View style={{ backgroundColor: C.bg, paddingHorizontal: S.lg, paddingTop: S.sm }}>
+          <Segmented<Tab>
+            value={tab}
+            onChange={setTab}
+            options={[
+              { id: 'season', label: 'Season' },
+              { id: 'standings', label: 'Standings' },
+              { id: 'career', label: 'Career' },
+              { id: 'driver', label: 'Driver' },
+            ]}
           />
-          <Card>
-            <Txt v="label" color={C.textDim}>
-              By championship
-            </Txt>
-            {Object.entries(me.stats).map(([sid, st]) => (
-              <View key={sid} style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                <Txt v="bodyStrong">{seriesDef(sid).name}</Txt>
-                <Txt v="small" color={C.textDim}>
-                  {st.starts} starts · {st.wins} W · {st.podiums} P · {st.titles} title{st.titles === 1 ? '' : 's'}
-                </Txt>
-              </View>
-            ))}
-            {Object.keys(me.stats).length === 0 ? (
-              <Txt v="small" color={C.textMute} style={{ marginTop: 6 }}>
-                No races yet.
-              </Txt>
-            ) : null}
-          </Card>
-          {a.phase === 'season' ? (
-            a.flags.farewell === world.year ? (
-              <Card accent={C.gold}>
-                <Txt v="label" color={C.gold}>
-                  Farewell season
-                </Txt>
-                <Txt v="body" color={C.textDim} style={{ marginTop: 4 }}>
-                  You’ve told the world {world.year} is your last year. Make it count.
-                </Txt>
-                <Btn label="Change your mind" kind="ghost" small style={{ marginTop: S.md }} onPress={() => mutate((w) => setFarewell(w, false))} />
-              </Card>
-            ) : (
-              <Btn label="Announce your farewell season" kind="ghost" small icon="flag" onPress={() => setConfirmFarewell(true)} />
-            )
+        </View>
+
+        <View style={{ paddingHorizontal: S.lg }}>
+          {tab === 'season' ? (
+            <Animated.View entering={FadeIn.duration(220)} style={{ gap: S.md, marginTop: S.md }}>
+              {a.injury && a.injury.racesOut > 0 ? (
+                <Notice color={C.red} icon="heart" title="Injured">
+                  {a.injury.desc}: out for {a.injury.racesOut} more race{a.injury.racesOut > 1 ? 's' : ''}. A reserve driver takes your seat.
+                </Notice>
+              ) : null}
+
+              {pendingInvite ? (
+                <Animated.View entering={ZoomIn.duration(240)}>
+                  <Notice color={C.gold} icon="crown" title="Special invitation" heading={SPECIAL_MAP[pendingInvite.special ?? '']?.name ?? 'One-off race'}>
+                    {world.teams[pendingInvite.team].name} want you for a one-off drive in the {seriesDef(pendingInvite.series).name}. {SPECIAL_MAP[pendingInvite.special ?? '']?.description ?? ''}
+                  </Notice>
+                  <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.sm }}>
+                    <Btn label="Accept" icon="check" small style={{ flex: 1 }} onPress={() => mutate((w) => answerInvite(w, pendingInvite.id, true))} />
+                    <Btn label="Decline" kind="ghost" small style={{ flex: 1 }} onPress={() => mutate((w) => answerInvite(w, pendingInvite.id, false))} />
+                  </View>
+                </Animated.View>
+              ) : null}
+
+              {a.phase === 'season' && meta ? (
+                <Animated.View entering={FadeInDown.duration(320)}>
+                  <EventPoster meta={meta} forecast={fc} disabled={blocked} onMoments={() => router.push('/race?mode=highlights')} />
+                </Animated.View>
+              ) : null}
+
+              {a.phase === 'season' && !meta && !me.contract ? (
+                <Notice color={C.steel} icon="info" title="On the sidelines" heading="No race seat this year">
+                  You’re working the simulator and waiting for a call. The season goes on without you.
+                </Notice>
+              ) : null}
+
+              {a.phase === 'seasonEnd' || a.phase === 'offers' ? (
+                <Notice color={C.gold} icon="trophy" title="Season complete" heading={a.phase === 'offers' ? 'Your future awaits' : `The ${world.year} season is over`}>
+                  {a.phase === 'offers' ? 'Teams have made their offers. Time to choose.' : 'See how it went, then talk contracts.'}
+                </Notice>
+              ) : null}
+
+              {a.lastResult ? <LastRaceStrip r={a.lastResult} /> : null}
+
+              {s && ss ? (
+                <View>
+                  <SectionTitle title="Championship" style={{ marginTop: S.sm, marginBottom: S.sm }} />
+                  <ChampionshipStrip pos={ss.round > 0 ? myPos : 0} pts={myPts} behind={leaderPts - myPts} left={ss.calendar.length - ss.round} />
+                  <View style={[hubStyles.table, { marginTop: S.sm }]}>
+                    <StandingsTable world={world} seriesId={s.id} highlight={me.id} limit={6} compact />
+                  </View>
+                </View>
+              ) : null}
+
+              {team ? (
+                <View>
+                  <SectionTitle title="Team" style={{ marginTop: S.sm, marginBottom: S.sm }} />
+                  <TeamPanel
+                    team={team}
+                    until={me.contract?.until}
+                    principal={team.principal.name}
+                    formerDriver={!!(team.principal.driverId && world.drivers[team.principal.driverId]?.careerId)}
+                    teamRel={a.teamRelation}
+                    mateRel={a.teammateRelation}
+                  />
+                </View>
+              ) : null}
+
+              {rival ? (
+                <RivalStrip
+                  rival={rival}
+                  colors={rival.contract ? world.teams[rival.contract.team]?.colors : undefined}
+                  battles={a.rivals[rival.id]?.battles ?? 0}
+                  incidents={a.rivals[rival.id]?.incidents ?? 0}
+                />
+              ) : null}
+            </Animated.View>
           ) : null}
-        </Animated.View>
-      ) : null}
+
+          {tab === 'standings' && s ? (
+            <Animated.View entering={FadeIn.duration(220)}>
+              <SectionTitle title={`${s.name} drivers`} style={{ marginBottom: S.sm }} />
+              <View style={hubStyles.table}>
+                <StandingsTable world={world} seriesId={s.id} highlight={me.id} />
+              </View>
+              <SectionTitle title="Teams" style={{ marginBottom: S.sm }} />
+              <View style={hubStyles.table}>
+                <TeamStandingsTable world={world} seriesId={s.id} highlight={team?.id} />
+              </View>
+              <Btn label="Other championships" icon="globe" kind="secondary" small style={{ marginTop: S.lg }} onPress={() => router.push('/world')} />
+            </Animated.View>
+          ) : null}
+
+          {tab === 'career' ? (
+            <Animated.View entering={FadeIn.duration(220)}>
+              <View style={[hubStyles.strip, { marginTop: S.md }]}>
+                <StatCell label="Starts" value={tot.starts} size={28} />
+                <StatCell label="Wins" value={tot.wins} size={28} align="center" color={tot.wins ? C.gold : C.text} />
+                <StatCell label="Podiums" value={tot.podiums} size={28} align="center" />
+                <StatCell label="Titles" value={tot.titles} size={28} align="right" color={tot.titles ? C.gold : C.text} />
+              </View>
+              <CareerTimeline seasons={a.seasons} moments={a.moments} current={s ? { year: world.year, series: s.id, teamName: team?.name ?? '', pos: myPos, pts: myPts } : undefined} />
+            </Animated.View>
+          ) : null}
+
+          {tab === 'driver' ? (
+            <Animated.View entering={FadeIn.duration(220)} style={{ gap: S.md }}>
+              <DriverFile me={me} team={team} age={age} rating={ovr(me)} seriesName={s?.name} />
+              {a.phase === 'season' ? (
+                a.flags.farewell === world.year ? (
+                  <View>
+                    <Notice color={C.gold} icon="flag" title="Farewell season">
+                      You’ve told the world {world.year} is your last year. Make it count.
+                    </Notice>
+                    <Btn label="Change your mind" kind="ghost" small style={{ marginTop: S.sm }} onPress={() => mutate((w) => setFarewell(w, false))} />
+                  </View>
+                ) : (
+                  <Btn label="Announce your farewell season" kind="ghost" small icon="flag" onPress={() => setConfirmFarewell(true)} />
+                )
+              ) : null}
+            </Animated.View>
+          ) : null}
+        </View>
+      </ScrollView>
+
+      {dock ? <ActionDock note={note}>{dock}</ActionDock> : null}
 
       {(a.pendingEvent || openEvent) && !quick && focused ? (
         <LifeEventSheet
@@ -345,115 +263,91 @@ export default function CareerHub() {
         />
       ) : null}
 
-      {quick ? <QuickResult outcome={quick} onClose={() => setQuick(null)} /> : null}
+      {quick ? <QuickResultSheet outcome={quick} onClose={() => setQuick(null)} /> : null}
 
-      <Modal visible={confirmFarewell && focused} transparent animationType="fade" onRequestClose={() => setConfirmFarewell(false)}>
-        <ModalScrim bg="rgba(2,4,10,0.85)">
-          <Card>
-            <Txt v="h1">One last season?</Txt>
-            <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
-              Tell the paddock that {world.year} is your final year. At the end of the season you can retire with a proper send-off, or change your mind.
-            </Txt>
-            <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
-              <Btn label="Not yet" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmFarewell(false)} />
-              <Btn
-                label="Announce it"
-                kind="gold"
-                small
-                style={{ flex: 1 }}
-                onPress={() => {
-                  setConfirmFarewell(false);
-                  haptic.success();
-                  mutate((w) => setFarewell(w, true));
-                }}
-              />
-            </View>
-          </Card>
-        </ModalScrim>
-      </Modal>
-    </Screen>
-  );
-}
-
-function visibleColor(a: string, b: string): string {
-  for (const c of [a, b]) {
-    const l = luminance(c);
-    if (l > 0.06 && l < 0.8) return c;
-  }
-  return C.red;
-}
-
-function fmtFans(k: number) {
-  if (k >= 1000) return `${(k / 1000).toFixed(1)}M`;
-  return `${Math.round(k)}k`;
-}
-
-function Stat({ icon, value, label, color }: { icon: 'heart' | 'fans' | 'money'; value: string; label: string; color: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-      <Icon name={icon} size={14} color={color} />
-      <Txt v="small" color={C.text} style={{ fontFamily: F.bodySemi }}>
-        {value}
-      </Txt>
-      {label ? (
-        <Txt v="small" color={C.textMute}>
-          {label}
+      <SheetModal visible={confirmFarewell && focused} onClose={() => setConfirmFarewell(false)} accent={C.gold}>
+        <Txt v="h1">One last season?</Txt>
+        <Txt v="body" color={C.textDim} style={{ marginTop: 6 }}>
+          Tell the paddock that {world.year} is your final year. At the end of the season you can retire with a proper send-off, or change your mind.
         </Txt>
-      ) : null}
+        <View style={{ flexDirection: 'row', gap: S.sm, marginTop: S.lg }}>
+          <Btn label="Not yet" kind="ghost" small style={{ flex: 1 }} onPress={() => setConfirmFarewell(false)} />
+          <Btn
+            label="Announce it"
+            kind="gold"
+            small
+            style={{ flex: 1 }}
+            onPress={() => {
+              setConfirmFarewell(false);
+              haptic.success();
+              mutate((w) => setFarewell(w, true));
+            }}
+          />
+        </View>
+      </SheetModal>
     </View>
   );
 }
 
-function Big({ label, value, color = C.text }: { label: string; value: number; color?: string }) {
+/** A full-width notice strip: coloured edge, kicker, optional heading, one paragraph. */
+function Notice({ color, icon, title, heading, children }: { color: string; icon: IconName; title: string; heading?: string; children: React.ReactNode }) {
   return (
-    <View style={{ flex: 1, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: C.line }}>
-      <Txt v="numBig" color={color} style={{ fontSize: 28, lineHeight: 30 }}>
-        {value}
-      </Txt>
-      <Txt v="label" color={C.textDim} style={{ fontSize: 10 }}>
-        {label}
+    <View style={[hubStyles.notice, { borderColor: withAlpha(color, 0.4) }]}>
+      <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: color }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Icon name={icon} size={14} color={color} strokeWidth={2.4} />
+        <Txt v="micro" color={color}>
+          {title}
+        </Txt>
+      </View>
+      {heading ? <Text style={hubStyles.noticeHead}>{heading}</Text> : null}
+      <Txt v="small" color={C.textDim} style={{ fontSize: 13.5, lineHeight: 19 }}>
+        {children}
       </Txt>
     </View>
   );
 }
 
-function QuickResult({ outcome, onClose }: { outcome: RaceOutcome; onClose: () => void }) {
-  const r = outcome.summary;
-  return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <ModalScrim bg="rgba(2,4,10,0.85)">
-        <Animated.View entering={ZoomIn.springify().damping(15)}>
-          <Card style={{ padding: 20, alignItems: 'center' }}>
-            <Txt v="label" color={C.textDim}>
-              {r.name}
-            </Txt>
-            <View style={{ marginVertical: S.md }}>
-              <PosBadge pos={r.pos} dnf={r.pos === 0} size={70} />
-            </View>
-            <Txt v="h1" center>
-              {r.headline}
-            </Txt>
-            <Txt v="small" color={C.textDim} style={{ marginTop: 6 }} center>
-              Started P{r.grid} · {r.points} pts · Championship P{outcome.standingsPos}
-            </Txt>
-            {outcome.newMoments.length ? (
-              <View style={{ marginTop: S.md, gap: 6, alignSelf: 'stretch' }}>
-                {outcome.newMoments.map((m) => (
-                  <View key={m.id} style={{ backgroundColor: withAlpha(C.gold, 0.12), borderRadius: R.sm, padding: 10 }}>
-                    <Txt v="h3" color={C.gold}>
-                      {m.title}
-                    </Txt>
-                    <Txt v="small" color={C.textDim}>
-                      {m.text}
-                    </Txt>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-            <Btn label="Continue" style={{ marginTop: S.lg, alignSelf: 'stretch' }} onPress={onClose} />
-          </Card>
-        </Animated.View>
-      </ModalScrim>
-    </Modal>
-  );
-}
+const hubStyles = StyleSheet.create({
+  title: {
+    fontFamily: F.display,
+    fontSize: 28,
+    lineHeight: 31,
+    color: C.text,
+    textTransform: 'uppercase',
+  },
+  table: {
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: R.sm,
+    overflow: 'hidden',
+  },
+  strip: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: R.sm,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  notice: {
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderRadius: R.sm,
+    paddingLeft: 15,
+    paddingRight: 12,
+    paddingVertical: 12,
+    gap: 4,
+    overflow: 'hidden',
+  },
+  noticeHead: {
+    fontFamily: F.title,
+    fontSize: 21,
+    lineHeight: 24,
+    color: C.text,
+    textTransform: 'uppercase',
+  },
+});

@@ -47,7 +47,7 @@ export const SERIES: SeriesDef[] = [
       { track: 'deccan' },
     ],
     rotation: ['nordhang', 'costaatlantica', 'highveld', 'aurora', 'pampas'],
-    color: '#E10600',
+    color: '#D0102B',
     accent: '#FF5A4A',
     description: 'The pinnacle. Twenty of the fastest drivers on Earth, ten teams, one world title.',
     salary: [900, 30000],
